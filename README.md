@@ -2,7 +2,7 @@
 
 > RDLC enforcement for Claude Code — hooks, skills, and wizard setup for research repos. The research-domain sibling of [claude-sdlc-wizard](https://github.com/BaseInfinity/claude-sdlc-wizard).
 
-**Status:** v0.1.0 (bootstrap, 2026-05-04). Three case studies cleared the xdlc "two case studies → extract" threshold: [anticheat](https://github.com/BaseInfinity/anticheat), [states-project-research](https://github.com/BaseInfinity/states-project-research), [tucson-investigation](https://github.com/BaseInfinity/tucson-investigation). Patterns documented in `~/rdlc/` ([BaseInfinity/rdlc](https://github.com/BaseInfinity/rdlc)).
+**Status:** v0.1.0 (bootstrap, 2026-05-04). Three case studies cleared the xdlc "two case studies → extract" threshold: [anticheat](https://github.com/BaseInfinity/anticheat), [states-project-research](https://github.com/BaseInfinity/states-project-research), [tucson-investigation](https://github.com/BaseInfinity/tucson-investigation). Pattern catalog lives in [`PATTERNS.md`](PATTERNS.md); proof-points in [`CASE_STUDIES.md`](CASE_STUDIES.md); build journal in [`EXTRACTION_NOTES.md`](EXTRACTION_NOTES.md). The standalone `~/rdlc/` repo was consolidated into this wizard on 2026-05-04 (mirrors GDLC retirement pattern).
 
 ## What this installs
 
@@ -77,6 +77,11 @@ curl -fsSL .../claude-rdlc-wizard/install.sh | bash   # research layer
 ## Documentation
 
 - `RDLC.md` — the consumer canonical that gets installed into target repos
+- `PATTERNS.md` — pattern catalog and lessons learned across case studies
+- `CASE_STUDIES.md` — proof-point cross-index + Contributions Inventory (artifact → wizard slot)
+- `EXTRACTION_NOTES.md` — build journal from the v0.1.0 extraction
+- `WIZARD_PLAN.md` — historical implementation plan (superseded by v0.1.0 ship)
+- `HANDOFF.md` — historical pre-build handoff (superseded)
 - `CLAUDE.md` — wizard self-instructions (this repo)
 - `ARCHITECTURE.md` — how the pieces fit
 - `CHANGELOG.md` — version history
@@ -84,7 +89,7 @@ curl -fsSL .../claude-rdlc-wizard/install.sh | bash   # research layer
 
 ## Case studies that proved the patterns
 
-See `~/rdlc/CASE_STUDIES.md` for the full cross-index. Short version:
+See [`CASE_STUDIES.md`](CASE_STUDIES.md) for the full cross-index. Short version:
 
 - **anticheat** (160 commits, 316 tests) — medical/legal evidence aggregation. GRADE-aligned labels, certification queue, compound mechanism verification.
 - **states-project-research** (43 commits, 257 bash asserts) — political/interview prep. VERIFIED/SUPPORTED/INFERRED/UNVERIFIED, fact regression suite, multi-deliverable generator with audience firewall.

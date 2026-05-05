@@ -2,7 +2,7 @@
 
 > **Part of the [XDLC ecosystem](https://github.com/BaseInfinity/xdlc)** — this is the RDLC sibling, installed into research repos as the correctness/evidence layer alongside `claude-sdlc-wizard`'s code-quality layer.
 >
-> **Skills first → wizard later.** The patterns shipped here were proven across three RDLC case studies (anticheat, states-project-research, tucson-investigation) before extraction. Pattern source: `~/rdlc/README.md` and `~/rdlc/CASE_STUDIES.md`.
+> **Skills first → wizard later.** The patterns shipped here were proven across three RDLC case studies (anticheat, states-project-research, tucson-investigation) before extraction. Pattern source: [`PATTERNS.md`](PATTERNS.md) and [`CASE_STUDIES.md`](CASE_STUDIES.md) (consolidated from the retired `~/rdlc/` repo on 2026-05-04).
 
 ## Project Overview
 

@@ -103,7 +103,7 @@ Templates are _scaffolds_, not finished implementations. The consumer repo custo
 
 ## Why templates were ported (vs. "mine in place")
 
-The rdlc README v0 rule says *"Reusable artifacts still live only in their source repos. Mine them in place."* That works when humans are doing the mining. It does not work when a wizard's `setup` skill needs to install something — the skill cannot reach into a private case-study repo's filesystem.
+The original v0 rule from `PATTERNS.md` says *"Reusable artifacts still live only in their source repos. Mine them in place."* That works when humans are doing the mining. It does not work when a wizard's `setup` skill needs to install something — the skill cannot reach into a private case-study repo's filesystem.
 
 So at the moment claude-rdlc-wizard exists, the v0 rule is superseded by the v0.1.0 wizard's installation needs. The contradiction is documented in `CHANGELOG.md`. The case-study repos remain authoritative for their own evolutions; this wizard ships the *generalized scaffold* extracted from them, not their full content.
 

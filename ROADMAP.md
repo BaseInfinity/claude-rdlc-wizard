@@ -43,8 +43,8 @@ Per xdlc skill-triple pattern doc, framework graduation requires:
 - Cross-tool: Claude Code + Codex + at least one other agent host validated
 
 When v1.0 ships:
-- `~/rdlc/README.md` v1 graduation criteria officially met
-- Promote to public registry, add row to `~/xdlc/README.md` framework status table
+- `PATTERNS.md` v1 graduation criteria officially met (originally stated in the retired `~/rdlc/README.md`)
+- Promote to public registry, update RDLC row in `~/xdlc/README.md` framework status table
 
 ## Deferred experiments (parked from rdlc README)
 

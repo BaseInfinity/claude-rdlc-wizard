@@ -13,3 +13,23 @@ leverage \(as verb meaning "use"\)
 
 # Rewriting rule explanation in CLAUDE.md
 banned phrases.* deep dive
+
+# PATTERNS.md / WIZARD_PLAN.md — banned-phrase list enumerations
+"deep dive", "game-changer"
+deep dive, game-changer, cutting-edge, elevate, unpack
+
+# PATTERNS.md / CASE_STUDIES.md — banned phrase example citations
+"smoking gun", "game-changer", "deep dive", "delve"
+
+# PATTERNS.md — TSP-domain legitimate uses cited in lessons
+Empowering People over Special Interests
+Empower legislators to lead boldly
+
+# PATTERNS.md / WIZARD_PLAN.md — slop-discussion meta-content
+allowlist.*"empower"
+slop scan.*"empower" rule
+"Company Culture Deep Dive"
+slop phrase in a header
+
+# CASE_STUDIES.md — "harness" appearing in "test harness" (legitimate technical term)
+test harness
