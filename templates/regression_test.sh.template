@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+# RDLC Fact Regression Tests — TEMPLATE
+# Ported from states-project-research/scripts/regression_test.sh (claude-rdlc-wizard v0.1.0)
+#
+# Customize: replace TODO markers with project-specific assertions about your facts.
+# Run: bash scripts/regression_test.sh
+# Exit code 0 = all pass, 1 = failures found
+#
+# Pattern: every defect found becomes a permanent regression check.
+# The ratchet only turns forward — assertions get stricter, never looser.
+
+set -euo pipefail
+
+FAIL=0
+PASS=0
+
+# TODO: Set the deliverable file paths your project produces.
+# Source markdown is the authoritative copy; HTML/PDF are derived but tested too
+# because they get forwarded without context.
+DOC="${RDLC_DOC:-output/research_document.md}"
+HTML="${RDLC_HTML:-output/research_document.html}"
+
+red()   { printf "\033[31mFAIL: %s\033[0m\n" "$1"; }
+green() { printf "\033[32mPASS: %s\033[0m\n" "$1"; }
+note()  { printf "\033[33mNOTE: %s\033[0m\n" "$1"; }
+
+# --- Helpers ---
+
+check_absent() {
+  local label="$1" pattern="$2" file="$3"
+  if [ ! -f "$file" ]; then
+    note "$label — file not found ($file), skipping"
+    return 0
+  fi
+  if grep -qiE "$pattern" "$file" 2>/dev/null; then
+    red "$label — found in $file"
+    grep -inE "$pattern" "$file" | head -3
+    FAIL=$((FAIL + 1))
+  else
+    green "$label"
+    PASS=$((PASS + 1))
+  fi
+}
+
+# Like check_absent but excludes the review/changelog section.
+# Useful when you intentionally document a corrected error inline (e.g. "Fixed
+# from: <wrong claim>") and don't want the assertion to fail on the explanation.
+check_absent_excl_review() {
+  local label="$1" pattern="$2" file="$3"
+  if [ ! -f "$file" ]; then
+    note "$label — file not found ($file), skipping"
+    return 0
+  fi
+  local hits
+  hits=$(grep -iE "$pattern" "$file" 2>/dev/null \
+    | grep -viE "Issue Found|Fix Applied|Fixed to|Softened to|overclaim|reframed from|What Changed|previously claimed|corrected from" \
+    | grep -iE "$pattern" || true)
+  if [ -n "$hits" ]; then
+    red "$label — found in $file (excluding review/changelog)"
+    printf '%s\n' "$hits" | head -3
+    FAIL=$((FAIL + 1))
+  else
+    green "$label"
+    PASS=$((PASS + 1))
+  fi
+}
+
+check_present() {
+  local label="$1" pattern="$2" file="$3"
+  if [ ! -f "$file" ]; then
+    note "$label — file not found ($file), skipping"
+    return 0
+  fi
+  if grep -qiE "$pattern" "$file" 2>/dev/null; then
+    green "$label"
+    PASS=$((PASS + 1))
+  else
+    red "$label — NOT found in $file"
+    FAIL=$((FAIL + 1))
+  fi
+}
+
+# --- Test sections ---
+
+echo "=== RDLC REGRESSION TESTS ==="
+echo ""
+
+# --- 1. Confidence labels exist on every claim ---
+# At least one confidence marker must exist in the deliverable
+echo "--- Confidence labels ---"
+check_present "Confidence vocabulary in use" "VERIFIED|SUPPORTED|INFERRED|UNVERIFIED|GAP|DIRECT" "$DOC"
+
+# --- 2. Source-at-first-mention ---
+# At least one source pattern must exist in the deliverable
+echo ""
+echo "--- Source citations ---"
+check_present "At least one source citation" "https?://|PMID:?[[:space:]]*[0-9]|DOI:?[[:space:]]*10\\.|\\[Source:" "$DOC"
+
+# --- 3. AI slop must be absent ---
+# Project-level enforcement layered on top of the per-edit slop hook
+echo ""
+echo "--- AI slop gate ---"
+check_absent "No 'deep dive'" "deep dive" "$DOC"
+check_absent "No 'game-changer'" "game.changer" "$DOC"
+check_absent "No 'cutting-edge'" "cutting.edge" "$DOC"
+check_absent "No 'delve'" "delve" "$DOC"
+check_absent "No 'tapestry'" "tapestry" "$DOC"
+check_absent "No 'paradigm'" "paradigm" "$DOC"
+check_absent "No 'smoking gun'" "smoking gun" "$DOC"
+check_absent "No 'in today's world'" "in today.s world" "$DOC"
+
+# --- 4. FABRICATED CLAIMS (must NOT exist) ---
+# TODO: Add assertions for every fabrication caught during cross-model review.
+# Pattern: a claim that was wrong, corrected, and must never reappear.
+echo ""
+echo "--- Fabricated claims ---"
+# Example (replace with project-specific):
+# check_absent "No fabricated 'Person X worked on Y' claim" "person_x.*(worked on y|joined y)" "$DOC"
+
+# --- 5. CORRECT FACTS (must exist) ---
+# TODO: Add assertions for every load-bearing fact your deliverable depends on.
+# Pattern: if this fact is removed or rewritten incorrectly, the deliverable fails its mission.
+echo ""
+echo "--- Correct facts ---"
+# Example (replace with project-specific):
+# check_present "Correct title" "Senior Director.*Lawmaker Engagement" "$DOC"
+# check_present "Correct salary range" "111,679.*117,262" "$DOC"
+
+# --- 6. AUDIENCE FIREWALL (private content NOT in public deliverable) ---
+# TODO: Add per-deliverable forbidden patterns from .rdlc/audience-firewall.conf
+echo ""
+echo "--- Audience firewall ---"
+# Example (replace with project-specific):
+# PUBLIC_HTML="output/public_strategic_analysis.html"
+# check_absent "No salary in public deliverable" "111,679|117,262|salary range" "$PUBLIC_HTML"
+# check_absent "No mock interview content in public deliverable" "mock interview|interviewer strategy" "$PUBLIC_HTML"
+
+# --- 7. HTML matches MD (regenerate-after-edit ratchet) ---
+# Catches "I edited the markdown but forgot to regenerate"
+if [ -f "$DOC" ] && [ -f "$HTML" ]; then
+    if [ "$DOC" -nt "$HTML" ]; then
+        red "Stale HTML — $DOC is newer than $HTML"
+        echo "    Run: python3 scripts/generate_deliverable.py"
+        FAIL=$((FAIL + 1))
+    else
+        green "HTML freshness — $HTML is current"
+        PASS=$((PASS + 1))
+    fi
+fi
+
+# --- Summary ---
+echo ""
+echo "=========================="
+echo "PASS: $PASS  /  FAIL: $FAIL"
+echo "=========================="
+
+if [ "$FAIL" -gt 0 ]; then
+    exit 1
+fi
+
+exit 0

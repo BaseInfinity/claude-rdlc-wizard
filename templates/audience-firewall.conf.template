@@ -1,0 +1,29 @@
+# RDLC Audience Firewall Configuration
+#
+# Per-deliverable forbidden patterns. The audience-firewall.sh hook reads this
+# file when Write/Edit/MultiEdit fires on output/ paths.
+#
+# Format (one rule per line):
+#   <deliverable-glob>|<forbidden-pattern>|<reason>
+#
+# - deliverable-glob: shell-style glob matching the file path (e.g. output/public_*.html)
+# - forbidden-pattern: ERE regex (case-insensitive) — the content the deliverable must not contain
+# - reason: human-readable explanation surfaced when the gate trips
+#
+# Comment lines start with #. Empty lines ignored.
+
+# --- Examples (delete or customize for your project) ---
+
+# Public-facing deliverables must not contain salary figures from private prep
+# output/public_*.html|salary range|salary figures belong to private interview prep only
+# output/public_*.html|\$1[01]\d,\d{3}|specific salary numbers leak from private deliverable
+
+# Clinical PDFs must not contain litigation-style language
+# output/clinical_*.pdf|smoking gun|litigation language inappropriate for clinical audience
+# output/clinical_*.pdf|manufacturer.{0,20}negligen|manufacturer claims belong to bottle-evidence litigation page
+
+# Family-facing pages must not contain clinical jargon
+# output/family_*.html|GRADE: (Very Low|Low|Moderate|High)|GRADE labels belong on clinician pages
+
+# Add your project's audience-firewall rules below this line:
+

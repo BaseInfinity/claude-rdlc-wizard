@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# RDLC AI Slop Scanner — TEMPLATE
+# Ported from states-project-research/SDLC.md slop section (claude-rdlc-wizard v0.1.0)
+#
+# Run: bash scripts/slop_scan.sh
+# Exit code 0 = zero hits (pass), 1 = hits found
+#
+# Pattern: any banned phrase = a credibility issue. One "smoking gun" or
+# "game-changer" and the reader stops trusting the whole document.
+
+set -uo pipefail
+
+# Default scan paths — customize for your project
+SCAN_PATHS=("${@:-output/ research/ evidence/}")
+
+# Allowlist (project-specific proper nouns, direct quotes)
+ALLOWLIST=".rdlc/slop-allowlist.txt"
+
+# --- Hard fail tier (rewrite immediately) ---
+HARD_FAIL_PATTERN='deep dive|game.changer|cutting.edge|elevate|delve|tapestry|holistic|robust|paradigm|groundbreaking|streamline|empower|harness|unleash|unpack|pivotal|crucial|bigger picture|smoking gun|synergy|arguably|it.s worth noting|at the end of the day|in today.s world|needless to say'
+
+# --- Soft warn tier (check context — legitimate use OK) ---
+SOFT_WARN_PATTERN='leverage|comprehensive|landscape|stakeholder|navigate|facilitate|best practices|fundamentally|inherently'
+
+red()    { printf "\033[31m%s\033[0m\n" "$1"; }
+green()  { printf "\033[32m%s\033[0m\n" "$1"; }
+yellow() { printf "\033[33m%s\033[0m\n" "$1"; }
+
+echo "=== RDLC SLOP SCAN ==="
+echo ""
+
+# Build allowlist regex (one phrase per line in the allowlist file)
+ALLOW_REGEX=""
+if [ -f "$ALLOWLIST" ]; then
+    ALLOW_REGEX=$(grep -vE '^[[:space:]]*(#|$)' "$ALLOWLIST" 2>/dev/null | tr '\n' '|' | sed 's/|$//')
+fi
+
+# --- Hard fail scan ---
+echo "Hard fail tier:"
+HARD_HITS=""
+for path in "${SCAN_PATHS[@]}"; do
+    [ ! -e "$path" ] && continue
+    if [ -n "$ALLOW_REGEX" ]; then
+        path_hits=$(grep -rniE "$HARD_FAIL_PATTERN" "$path" --include='*.md' 2>/dev/null \
+            | grep -viE "$ALLOW_REGEX" || true)
+    else
+        path_hits=$(grep -rniE "$HARD_FAIL_PATTERN" "$path" --include='*.md' 2>/dev/null || true)
+    fi
+    if [ -n "$path_hits" ]; then
+        HARD_HITS="${HARD_HITS}${path_hits}"$'\n'
+    fi
+done
+
+if [ -n "$HARD_HITS" ]; then
+    red "FAIL: hard-tier slop detected"
+    printf '%s' "$HARD_HITS" | head -20
+    HARD_COUNT=$(printf '%s' "$HARD_HITS" | grep -c '' 2>/dev/null || echo 0)
+    echo ""
+    red "Hard fail hits: $HARD_COUNT — rewrite before commit."
+    HARD_FAIL=1
+else
+    green "PASS: zero hard-tier slop"
+    HARD_FAIL=0
+fi
+
+echo ""
+
+# --- Soft warn scan ---
+echo "Soft warn tier (review for context):"
+SOFT_HITS=""
+for path in "${SCAN_PATHS[@]}"; do
+    [ ! -e "$path" ] && continue
+    if [ -n "$ALLOW_REGEX" ]; then
+        path_hits=$(grep -rniE "$SOFT_WARN_PATTERN" "$path" --include='*.md' 2>/dev/null \
+            | grep -viE "$ALLOW_REGEX" || true)
+    else
+        path_hits=$(grep -rniE "$SOFT_WARN_PATTERN" "$path" --include='*.md' 2>/dev/null || true)
+    fi
+    if [ -n "$path_hits" ]; then
+        SOFT_HITS="${SOFT_HITS}${path_hits}"$'\n'
+    fi
+done
+
+if [ -n "$SOFT_HITS" ]; then
+    SOFT_COUNT=$(printf '%s' "$SOFT_HITS" | grep -c '' 2>/dev/null || echo 0)
+    yellow "WARN: $SOFT_COUNT soft-tier hits — review context, may be legitimate domain use"
+    printf '%s' "$SOFT_HITS" | head -10
+else
+    green "PASS: zero soft-tier slop"
+fi
+
+echo ""
+echo "======================="
+
+if [ "$HARD_FAIL" -eq 1 ]; then
+    echo "Slop scan FAILED. Rewrite hard-tier hits or add proper-noun proper exclusions to $ALLOWLIST."
+    exit 1
+fi
+
+echo "Slop scan PASSED."
+exit 0

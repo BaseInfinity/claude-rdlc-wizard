@@ -1,0 +1,51 @@
+{
+  "description": "RDLC Wizard enforcement hooks",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/rdlc-prompt-check.sh"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/slop-scan-pretool.sh"
+          },
+          {
+            "type": "command",
+            "if": "Write(research/**) Edit(research/**) MultiEdit(research/**) Write(evidence/**) Edit(evidence/**) MultiEdit(evidence/**)",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/confidence-required.sh"
+          },
+          {
+            "type": "command",
+            "if": "Write(research/**) Edit(research/**) MultiEdit(research/**) Write(evidence/**) Edit(evidence/**) MultiEdit(evidence/**)",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/source-required.sh"
+          },
+          {
+            "type": "command",
+            "if": "Write(output/**) Edit(output/**) MultiEdit(output/**)",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/audience-firewall.sh"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/instructions-loaded-check.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

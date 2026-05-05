@@ -1,0 +1,126 @@
+<!-- RDLC Wizard Version: {{WIZARD_VERSION}} -->
+<!-- Setup Date: {{SETUP_DATE}} -->
+<!-- Completed Steps: {{COMPLETED_STEPS}} -->
+<!-- Domain: {{DOMAIN}} -->
+
+# RDLC Configuration — {{PROJECT_NAME}}
+
+This document is your project's research-lifecycle canonical. Edit it freely. The wizard's `update-rdlc` skill preserves your customizations and only touches the metadata header above.
+
+## Wizard Version Tracking
+
+| Property | Value |
+|----------|-------|
+| Wizard Version | {{WIZARD_VERSION}} |
+| Last Updated | {{SETUP_DATE}} |
+| Domain Preset | {{DOMAIN}} |
+| Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
+
+## RDLC Enforcement
+
+This repository uses claude-rdlc-wizard to enforce:
+
+1. **Source discipline** — every claim has a citation; sources ranked by tier
+2. **Confidence classification** — every claim labeled
+3. **AI slop gate** — banned-phrase scan before commit
+4. **Audience firewall** — per-deliverable boundaries enforced in generator
+5. **Cross-model review** — adversarial validation for high-stakes deliverables
+6. **Fact regression tests** — every defect becomes a permanent assertion
+
+## Hooks Installed
+
+| Hook | Trigger | Purpose |
+|------|---------|---------|
+| `rdlc-prompt-check.sh` | Every prompt | RDLC baseline reminder |
+| `instructions-loaded-check.sh` | Session start | Validates RDLC.md exists |
+| `slop-scan-pretool.sh` | Before Write/Edit | Blocks AI slop additions |
+| `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/` | Requires confidence label |
+| `source-required.sh` | Before Write/Edit on research files | Requires source-at-first-mention |
+| `audience-firewall.sh` | Before Write to `output/` | Blocks audience-private leaks |
+
+## Skills Available
+
+| Skill | Invocation | Purpose |
+|-------|------------|---------|
+| RDLC | `/rdlc` | Full research workflow |
+| Setup | `/setup-rdlc` | Confidence-driven project setup |
+| Update | `/update-rdlc` | Smart update with drift detection |
+| Feedback | `/feedback-rdlc` | Privacy-first contribution loop |
+
+## Source Hierarchy
+
+{{SOURCE_HIERARCHY}}
+
+(Wizard fills this section based on detected domain. Edit to match your project's evidence types.)
+
+## Confidence Vocabulary
+
+{{CONFIDENCE_VOCAB}}
+
+(Wizard fills based on chosen fourth-label preference: UNVERIFIED for research where sources should exist, GAP for investigation where some facts cannot be recovered.)
+
+## AI Slop Gate
+
+Hard fail (rewrite immediately):
+deep dive, game-changer, cutting-edge, elevate, delve, tapestry, holistic, robust, paradigm, groundbreaking, streamline, empower, harness, unleash, unpack, pivotal, crucial, bigger picture, smoking gun, synergy, arguably, it's worth noting, at the end of the day, in today's world, needless to say
+
+Soft warn (check context):
+leverage, comprehensive, landscape, stakeholder, navigate, facilitate, best practices, fundamentally, inherently
+
+Run: `bash scripts/slop_scan.sh`
+
+Allowlist project-specific proper nouns at `.rdlc/slop-allowlist.txt`.
+
+## Audience Firewall
+
+{{AUDIENCE_FIREWALL}}
+
+(Wizard fills based on detected deliverables. If only one deliverable exists, this section is empty.)
+
+## Cross-Model Review Protocol
+
+For high-stakes deliverables: pre-flight self-review → mission-first handoff → Codex xhigh review → dialogue loop (2-3 rounds) → CERTIFIED.
+
+Full protocol: `~/xdlc/docs/cross-model-review.md` and `skills/rdlc/SKILL.md` "Cross-Model Review."
+
+## Fact Regression Tests
+
+Every defect becomes a permanent check.
+
+Run: `bash scripts/regression_test.sh`
+
+Pattern:
+```bash
+check_present "Claim X exists" "expected pattern" "$DOC"
+check_absent "No fabrication Y" "forbidden pattern" "$DOC"
+```
+
+## Confidence Levels (For Tasks)
+
+| Level | Action |
+|-------|--------|
+| HIGH (90%+) | Proceed after approval |
+| MEDIUM (60-89%) | Highlight uncertainties |
+| LOW (<60%) | ASK before proceeding |
+| FAILED 2x | STOP and ASK |
+
+## Configuration Files
+
+```
+.claude/
+├── settings.json
+├── hooks/{rdlc-prompt-check,instructions-loaded-check,slop-scan-pretool,confidence-required,source-required,audience-firewall}.sh
+└── skills/{rdlc,setup,update,feedback}/SKILL.md
+
+scripts/{regression_test.sh,slop_scan.sh,generate_deliverable.py}
+
+research/                   # research files (lowercase_with_underscores.md)
+evidence/{sources,...}      # raw source material with URLs
+output/                     # final deliverables (HTML, PDF)
+.reviews/                   # handoff.json + preflight-*.md
+.rdlc/{slop-allowlist.txt,audience-firewall.conf,version}
+```
+
+## Lessons Learned
+
+(Empty at install. Populate as the project earns rules.)

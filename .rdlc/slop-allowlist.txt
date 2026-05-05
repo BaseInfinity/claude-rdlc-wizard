@@ -1,0 +1,15 @@
+# claude-rdlc-wizard slop scan allowlist
+#
+# This wizard DEFINES the banned phrase list as part of its own documentation.
+# Lines that enumerate the bans must not themselves trigger the gate.
+# These allowlisted fragments are unique to the documentation lines, not to
+# slop usage.
+
+# The hard-fail banned-phrase list line (defines the bans, doesn't use them)
+deep dive, game-changer, cutting-edge, elevate, delve
+
+# The soft-warn list line
+leverage \(as verb meaning "use"\)
+
+# Rewriting rule explanation in CLAUDE.md
+banned phrases.* deep dive

@@ -1,0 +1,15 @@
+{
+  "name": "claude-rdlc-wizard",
+  "version": "0.1.0",
+  "description": "RDLC enforcement for Claude Code — research lifecycle hooks, skills, and templates",
+  "author": "BaseInfinity",
+  "license": "MIT",
+  "homepage": "https://github.com/BaseInfinity/claude-rdlc-wizard",
+  "skills": [
+    "skills/rdlc/SKILL.md",
+    "skills/setup/SKILL.md",
+    "skills/update/SKILL.md",
+    "skills/feedback/SKILL.md"
+  ],
+  "hooks": "hooks/hooks.json"
+}

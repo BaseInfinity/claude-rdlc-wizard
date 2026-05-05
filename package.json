@@ -1,0 +1,35 @@
+{
+  "name": "claude-rdlc-wizard",
+  "version": "0.1.0",
+  "description": "RDLC enforcement for Claude Code — hooks, skills, and wizard setup for research repos. The research-domain sibling of claude-sdlc-wizard.",
+  "bin": {
+    "rdlc-wizard": "cli/bin/rdlc-wizard.js"
+  },
+  "files": [
+    "cli/",
+    "skills/",
+    "hooks/",
+    "templates/",
+    ".claude-plugin/",
+    "RDLC.md",
+    "CHANGELOG.md"
+  ],
+  "keywords": [
+    "claude-code",
+    "rdlc",
+    "research",
+    "ai-agent",
+    "developer-tools",
+    "research-quality",
+    "fact-checking",
+    "cross-model-review"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BaseInfinity/claude-rdlc-wizard.git"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

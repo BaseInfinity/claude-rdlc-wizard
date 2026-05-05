@@ -1,0 +1,211 @@
+#!/usr/bin/env python3
+"""
+RDLC Multi-Deliverable Generator — TEMPLATE
+
+Ported scaffold from states-project-research/scripts/generate_pdf.py
+(claude-rdlc-wizard v0.1.0).
+
+One source markdown research base feeds multiple HTML/PDF deliverables, each
+with its own audience boundaries. The generator enforces audience-firewall
+rules at render time — content the public deliverable must not contain is
+stripped before HTML is written.
+
+Run:
+    python3 scripts/generate_deliverable.py             # all deliverables
+    python3 scripts/generate_deliverable.py interview   # one deliverable
+
+Customize:
+1. Replace the DELIVERABLE_CONFIGS dict with your project's deliverables.
+2. Each config picks: source markdown, output filename, audience, sections to
+   include, and forbidden_patterns (audience-firewall regex list).
+3. Add domain-specific CSS/JS at the bottom.
+"""
+
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+RESEARCH_DIR = ROOT / "research"
+OUTPUT_DIR = ROOT / "output"
+
+# --- Configuration ---
+
+DELIVERABLE_CONFIGS = {
+    # TODO: Replace these examples with your project's deliverables.
+    "research_document": {
+        "source_md": OUTPUT_DIR / "research_document.md",
+        "output_html": OUTPUT_DIR / "research_document.html",
+        "title": "Research Document",
+        "audience": "internal",
+        "include_sections": "all",  # or list of section header strings
+        "forbidden_patterns": [],   # audience-firewall regex list
+        "footer": "Internal — do not distribute",
+    },
+    # Example public-facing deliverable with audience firewall:
+    # "strategic_analysis": {
+    #     "source_md": OUTPUT_DIR / "research_document.md",
+    #     "output_html": OUTPUT_DIR / "strategic_analysis.html",
+    #     "title": "Strategic Analysis",
+    #     "audience": "external",
+    #     "include_sections": ["Org Overview", "Strategy", "Competitive Landscape"],
+    #     "forbidden_patterns": [
+    #         r"salary range",
+    #         r"\$1[01]\d,\d{3}",     # any salary number
+    #         r"mock interview",
+    #         r"interviewer strategy",
+    #     ],
+    #     "footer": "Public-facing analysis",
+    # },
+}
+
+
+# --- Audience firewall enforcement ---
+
+def enforce_audience_firewall(content: str, forbidden: list[str], deliverable_name: str) -> str:
+    """Strip lines matching any forbidden pattern. Loud failure if pattern hits.
+
+    The point: PDFs and HTML get forwarded without their context. The
+    boundary must hold at render time, not just at the source page.
+    """
+    if not forbidden:
+        return content
+
+    violations = []
+    kept_lines = []
+    for i, line in enumerate(content.split("\n"), start=1):
+        line_violated = False
+        for pattern in forbidden:
+            if re.search(pattern, line, re.IGNORECASE):
+                violations.append((i, pattern, line.strip()[:80]))
+                line_violated = True
+                break
+        if not line_violated:
+            kept_lines.append(line)
+
+    if violations:
+        print(
+            f"WARN [{deliverable_name}]: stripped {len(violations)} forbidden lines:",
+            file=sys.stderr,
+        )
+        for ln, pat, snippet in violations[:5]:
+            print(f"  line {ln} matched /{pat}/: {snippet}", file=sys.stderr)
+        if len(violations) > 5:
+            print(f"  ... and {len(violations) - 5} more", file=sys.stderr)
+
+    return "\n".join(kept_lines)
+
+
+# --- Section filter ---
+
+def filter_sections(content: str, include_sections) -> str:
+    """Keep only specified top-level sections."""
+    if include_sections == "all":
+        return content
+
+    if not isinstance(include_sections, list):
+        return content
+
+    keep = set(s.lower() for s in include_sections)
+    out = []
+    in_section = True
+    for line in content.split("\n"):
+        m = re.match(r"^#+\s+(.+)$", line)
+        if m:
+            heading = m.group(1).strip().lower()
+            in_section = any(target in heading for target in keep)
+        if in_section:
+            out.append(line)
+    return "\n".join(out)
+
+
+# --- Markdown to HTML (lightweight, no dependencies) ---
+
+def md_to_html(md: str, title: str, footer: str) -> str:
+    """Minimal markdown-to-HTML renderer.
+
+    Replace this with your preferred renderer (markdown2, mistune, pandoc) when
+    the project's deliverables justify the dependency. Kept inline at v0.1 so
+    the template installs without `pip install`.
+    """
+    html_body = md
+    # Headers
+    html_body = re.sub(r"^# (.+)$", r"<h1>\1</h1>", html_body, flags=re.MULTILINE)
+    html_body = re.sub(r"^## (.+)$", r"<h2>\1</h2>", html_body, flags=re.MULTILINE)
+    html_body = re.sub(r"^### (.+)$", r"<h3>\1</h3>", html_body, flags=re.MULTILINE)
+    # Bold
+    html_body = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html_body)
+    # Inline code
+    html_body = re.sub(r"`([^`]+)`", r"<code>\1</code>", html_body)
+    # Paragraphs (very basic)
+    paragraphs = []
+    for block in re.split(r"\n\n+", html_body.strip()):
+        if block.startswith("<h"):
+            paragraphs.append(block)
+        else:
+            paragraphs.append(f"<p>{block}</p>")
+    html_body = "\n".join(paragraphs)
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{title}</title>
+<style>
+body {{ font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; max-width: 800px; margin: 2em auto; padding: 0 1em; line-height: 1.5; color: #222; }}
+h1, h2, h3 {{ color: #111; }}
+h1 {{ border-bottom: 2px solid #333; padding-bottom: 0.3em; }}
+h2 {{ border-bottom: 1px solid #999; padding-bottom: 0.2em; margin-top: 1.5em; }}
+code {{ background: #f4f4f4; padding: 0.1em 0.3em; border-radius: 3px; }}
+table {{ border-collapse: collapse; margin: 1em 0; }}
+th, td {{ border: 1px solid #ccc; padding: 0.4em 0.7em; }}
+.footer {{ margin-top: 3em; padding-top: 1em; border-top: 1px solid #ccc; color: #666; font-size: 0.85em; }}
+</style>
+</head>
+<body>
+{html_body}
+<div class="footer">{footer}</div>
+</body>
+</html>
+"""
+
+
+# --- Generate ---
+
+def generate(name: str, config: dict) -> None:
+    src = config["source_md"]
+    if not src.exists():
+        print(f"ERROR [{name}]: source markdown not found at {src}", file=sys.stderr)
+        sys.exit(1)
+
+    content = src.read_text(encoding="utf-8")
+    content = filter_sections(content, config.get("include_sections", "all"))
+    content = enforce_audience_firewall(
+        content, config.get("forbidden_patterns", []), name
+    )
+
+    html = md_to_html(content, config.get("title", name), config.get("footer", ""))
+    out = config["output_html"]
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(html, encoding="utf-8")
+    print(f"Wrote {out}")
+
+
+def main() -> None:
+    target = sys.argv[1] if len(sys.argv) > 1 else "all"
+
+    if target == "all":
+        for name, config in DELIVERABLE_CONFIGS.items():
+            generate(name, config)
+    elif target in DELIVERABLE_CONFIGS:
+        generate(target, DELIVERABLE_CONFIGS[target])
+    else:
+        print(
+            f"Unknown target '{target}'. Available: {list(DELIVERABLE_CONFIGS.keys()) + ['all']}",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+
+if __name__ == "__main__":
+    main()

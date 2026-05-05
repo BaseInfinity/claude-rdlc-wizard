@@ -1,0 +1,17 @@
+# RDLC Slop Scan Allowlist — Project-specific proper nouns and direct quotes
+#
+# Lines in this file are excluded from the slop scan. Use for:
+# - Mission pillar names that legitimately use banned words
+#   Example: "Empowering People over Special Interests" (TSP mission pillar — "empower" is the actual name)
+# - Direct quotes from source material
+#   Example: '"Streamline our process"' (when quoted from a stakeholder, attribute as a quote)
+# - Project-specific terms that incidentally match the banned list
+#
+# Format: one phrase per line. Comment lines start with #.
+# Empty lines are ignored.
+#
+# DO NOT add common AI slop just to suppress it. The allowlist is for legitimate
+# domain vocabulary, not for hiding bad writing.
+
+# Add your project's allowlisted phrases below this line:
+
