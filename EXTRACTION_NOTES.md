@@ -11,7 +11,7 @@
 | Docs | 5 | README, CHANGELOG, CLAUDE.md, ARCHITECTURE.md, ROADMAP.md |
 | Canonical | 1 | `RDLC.md` (consumer-installable) |
 | Skills | 4 | `rdlc` (650-line doing-the-work), `setup`, `update`, `feedback` — skill triple per `~/xdlc/docs/skill-triple-pattern.md` |
-| Hooks | 7 + json | `rdlc-prompt-check`, `instructions-loaded-check`, `slop-scan-pretool`, `confidence-required`, `source-required`, `audience-firewall`, `_find-rdlc-root.sh` helper |
+| Hooks | 7 + json | `rdlc-prompt-check`, `rdlc-instructions-check`, `slop-scan-pretool`, `confidence-required`, `source-required`, `audience-firewall`, `_find-rdlc-root.sh` helper |
 | Templates | 6 | `RDLC.md`, `regression_test.sh`, `slop_scan.sh`, `generate_deliverable.py`, `slop-allowlist.txt`, `audience-firewall.conf` |
 | Tests | 3 suites | 28 assertions, all green; test-hooks / test-templates / test-slop-scan |
 | Install | 2 | `install.sh` (with `--pair` flag), `package.json` |

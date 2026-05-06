@@ -64,7 +64,7 @@ assert ".claude/settings.json created" '[ -f "$TMPDIR_TEST/.claude/settings.json
 assert "settings.json parses as valid JSON" 'jq -e . "$TMPDIR_TEST/.claude/settings.json" >/dev/null'
 
 # --- Hooks (must be present and executable) ---
-for hook in rdlc-prompt-check.sh slop-scan-pretool.sh confidence-required.sh source-required.sh audience-firewall.sh instructions-loaded-check.sh _find-rdlc-root.sh; do
+for hook in rdlc-prompt-check.sh slop-scan-pretool.sh confidence-required.sh source-required.sh audience-firewall.sh rdlc-instructions-check.sh _find-rdlc-root.sh; do
   assert ".claude/hooks/$hook created" '[ -f "$TMPDIR_TEST/.claude/hooks/$hook" ]'
   assert ".claude/hooks/$hook is executable" '[ -x "$TMPDIR_TEST/.claude/hooks/$hook" ]'
 done

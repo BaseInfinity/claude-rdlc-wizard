@@ -50,7 +50,7 @@ claude-rdlc-wizard/
 │   ├── confidence-required.sh      # PreToolUse claim-without-label gate
 │   ├── source-required.sh          # PreToolUse source-at-first-mention gate
 │   ├── audience-firewall.sh        # PreToolUse audience-leak gate
-│   └── instructions-loaded-check.sh # SessionStart RDLC.md presence check
+│   └── rdlc-instructions-check.sh # SessionStart RDLC.md presence check
 ├── templates/
 │   ├── RDLC.md.template
 │   ├── regression_test.sh.template
@@ -82,7 +82,7 @@ All hooks are POSIX bash, no external dependencies beyond `grep -E`, `jq`, and s
 | Hook | Trigger | Gate |
 |------|---------|------|
 | `rdlc-prompt-check.sh` | UserPromptSubmit | Print RDLC baseline reminder |
-| `instructions-loaded-check.sh` | SessionStart | Confirm `RDLC.md` exists; if not, prompt setup |
+| `rdlc-instructions-check.sh` | SessionStart | Confirm `RDLC.md` exists; if not, prompt setup |
 | `slop-scan-pretool.sh` | PreToolUse Write/Edit | Block if banned phrases in new content |
 | `confidence-required.sh` | PreToolUse Write/Edit on `research/`,`evidence/` | Block if a new claim lacks a confidence label |
 | `source-required.sh` | PreToolUse Write/Edit on research files | Block if a claim is added without a citation/URL |

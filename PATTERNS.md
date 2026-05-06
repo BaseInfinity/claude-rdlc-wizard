@@ -27,7 +27,7 @@ Naming: the DLC ecosystem standardized on the `claude-*-wizard` prefix as of xdl
 | Distribution-ready | Yes — installable via `install.sh` or `npx` |
 | Graduation status | Pre-graduation — awaiting first non-originating consumer |
 | Skills shipped | `/rdlc`, `/setup-rdlc`, `/update-rdlc`, `/feedback-rdlc` |
-| Hooks shipped | 6 + 1 helper — slop scan, confidence-required, source-required, audience-firewall, prompt-check, instructions-loaded-check |
+| Hooks shipped | 6 + 1 helper — slop scan, confidence-required, source-required, audience-firewall, prompt-check, rdlc-instructions-check |
 | Templates shipped | 6 — RDLC.md, regression_test.sh, slop_scan.sh, generate_deliverable.py, slop-allowlist.txt, audience-firewall.conf |
 | Tests | 3 suites, 28 assertions, all green |
 
@@ -78,7 +78,7 @@ All three converged on the same universal loop: evidence → claims → confiden
 - `source-required.sh` — source-at-first-mention gate on research files
 - `audience-firewall.sh` — per-deliverable forbidden-pattern gate on `output/` writes
 - `rdlc-prompt-check.sh` — RDLC baseline reminder on every prompt
-- `instructions-loaded-check.sh` — SessionStart RDLC.md presence check
+- `rdlc-instructions-check.sh` — SessionStart RDLC.md presence check
 
 All default to soft-warn. `RDLC_HOOKS_STRICT=1` opts into hard-block (exit 2).
 

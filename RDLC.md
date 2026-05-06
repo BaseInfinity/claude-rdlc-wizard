@@ -1,4 +1,4 @@
-<!-- RDLC Wizard Version: 0.2.0 -->
+<!-- RDLC Wizard Version: 0.2.1 -->
 <!-- Setup Date: TBD -->
 <!-- Completed Steps: -->
 <!-- Domain: research -->
@@ -11,7 +11,7 @@ This document is installed by `claude-rdlc-wizard` into the consumer repo. It is
 
 | Property | Value |
 |----------|-------|
-| Wizard Version | 0.2.0 |
+| Wizard Version | 0.2.1 |
 | Last Updated | 2026-05-05 |
 | Claude Code Baseline | v2.1.111+ (required for Opus 4.7 / `opus[1m]`) |
 | Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
@@ -56,7 +56,7 @@ This repository uses the RDLC Wizard to enforce:
 | Hook | Trigger | Purpose |
 |------|---------|---------|
 | `rdlc-prompt-check.sh` | Every prompt | RDLC baseline reminder |
-| `instructions-loaded-check.sh` | Session start | Validates RDLC.md exists; prompts setup if missing |
+| `rdlc-instructions-check.sh` | Session start | Validates RDLC.md exists; prompts setup if missing |
 | `slop-scan-pretool.sh` | Before Write/Edit | Blocks AI slop additions |
 | `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/` | Requires confidence label on new claims |
 | `source-required.sh` | Before Write/Edit on research files | Requires source-at-first-mention |
@@ -176,7 +176,7 @@ The test count grows monotonically. Test counts in docs go stale — verify dyna
 ├── hooks/
 │   ├── _find-rdlc-root.sh
 │   ├── rdlc-prompt-check.sh
-│   ├── instructions-loaded-check.sh
+│   ├── rdlc-instructions-check.sh
 │   ├── slop-scan-pretool.sh
 │   ├── confidence-required.sh
 │   ├── source-required.sh

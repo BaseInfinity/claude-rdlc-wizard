@@ -26,7 +26,7 @@ const FILES = [
   { src: 'hooks/confidence-required.sh', dest: '.claude/hooks/confidence-required.sh', executable: true, base: REPO_ROOT },
   { src: 'hooks/source-required.sh', dest: '.claude/hooks/source-required.sh', executable: true, base: REPO_ROOT },
   { src: 'hooks/audience-firewall.sh', dest: '.claude/hooks/audience-firewall.sh', executable: true, base: REPO_ROOT },
-  { src: 'hooks/instructions-loaded-check.sh', dest: '.claude/hooks/instructions-loaded-check.sh', executable: true, base: REPO_ROOT },
+  { src: 'hooks/rdlc-instructions-check.sh', dest: '.claude/hooks/rdlc-instructions-check.sh', executable: true, base: REPO_ROOT },
 
   { src: 'skills/rdlc/SKILL.md', dest: '.claude/skills/rdlc/SKILL.md', base: REPO_ROOT },
   { src: 'skills/setup/SKILL.md', dest: '.claude/skills/setup/SKILL.md', base: REPO_ROOT },

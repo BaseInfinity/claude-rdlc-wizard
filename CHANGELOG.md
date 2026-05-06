@@ -2,6 +2,18 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.2.1] - 2026-05-05
+
+### Fix: hook name collision with sdlc-wizard
+
+Dogfood install into `states-project-research` (which has `claude-sdlc-wizard` already installed) surfaced a naming collision: both wizards shipped a hook called `instructions-loaded-check.sh`, but with different content and different events (sdlc: `InstructionsLoaded` checks `SDLC.md`+`TESTING.md`; rdlc: `SessionStart` checks `RDLC.md`). On a paired install, rdlc's `SessionStart` event would have fired sdlc's script — silent gate failure.
+
+### Changed
+
+- Renamed `hooks/instructions-loaded-check.sh` → `hooks/rdlc-instructions-check.sh` (script content unchanged)
+- Updated all active references: `hooks/hooks.json`, `cli/init.js`, `cli/templates/settings.json`, `tests/test-cli-init.sh`, `tests/test-hooks.sh`, `RDLC.md`, `ARCHITECTURE.md`, `PATTERNS.md`, `EXTRACTION_NOTES.md`
+- Historical references in `CHANGELOG.md` (v0.1.0 entry), `WIZARD_PLAN.md`, `HANDOFF.md` left as-is — they describe the pre-rename state accurately
+
 ## [0.2.0] - 2026-05-05
 
 ### npm CLI

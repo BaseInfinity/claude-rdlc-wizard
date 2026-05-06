@@ -57,8 +57,8 @@ assert "slop-scan-pretool.sh exits 0 outside RDLC project" '(cd /tmp && echo "{}
 # rdlc-prompt-check.sh exits silently outside RDLC project
 assert "rdlc-prompt-check.sh exits 0 outside RDLC project" '(cd /tmp && "$HOOKS/rdlc-prompt-check.sh" </dev/null >/dev/null)'
 
-# instructions-loaded-check.sh handles missing RDLC.md
-assert "instructions-loaded-check.sh handles missing RDLC.md" '(cd /tmp && "$HOOKS/instructions-loaded-check.sh" >/dev/null)'
+# rdlc-instructions-check.sh handles missing RDLC.md
+assert "rdlc-instructions-check.sh handles missing RDLC.md" '(cd /tmp && "$HOOKS/rdlc-instructions-check.sh" >/dev/null)'
 
 echo ""
 echo "=== SUMMARY ==="
