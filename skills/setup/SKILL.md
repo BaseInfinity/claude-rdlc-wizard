@@ -15,9 +15,13 @@ Confidence-driven setup wizard. Scan the project, infer as much as possible, and
 
 **DO NOT ask a fixed list of questions. DO NOT ask what you already know.**
 
-## MANDATORY FIRST ACTION: Read RDLC.md (Wizard Template)
+## MANDATORY FIRST ACTION: Read RDLC.md (Wizard Canonical)
 
-Before doing ANYTHING else, Read the wizard's template at `${CLAUDE_PLUGIN_ROOT}/RDLC.md` (or the local clone equivalent). This is the source of truth for what gets installed. After reading, use it as the canonical for every step below.
+Before doing ANYTHING else, Read the wizard's canonical at `${CLAUDE_PLUGIN_ROOT}/RDLC.md` (or the local clone equivalent). This is the source of truth for what gets installed. After reading, use it as the canonical for every step below.
+
+## Two Layers of Install
+
+This skill is the **conversational scan + customize** layer. The **file-drop** layer is the npm CLI (`npx claude-rdlc-wizard init`) — it owns copying hooks, skills, settings.json, and the canonical RDLC.md into the consumer repo. This skill calls the CLI for the skeleton, then customizes the result based on what the scan detected.
 
 ## Execution Checklist
 
@@ -97,51 +101,38 @@ Present ALL detected values organized by state:
 
 DO NOT proceed to file generation until all data points are resolved.
 
-### Step 4: Generate or Update RDLC.md
+### Step 4: Run the CLI to Drop the Skeleton
 
-If `RDLC.md` does NOT exist: copy the template from `${CLAUDE_PLUGIN_ROOT}/templates/RDLC.md.template`, fill in metadata, source hierarchy adapted to detected domain, confidence vocabulary with chosen fourth label, audience-firewall section if multiple deliverables.
+Run:
 
-If `RDLC.md` DOES exist: never overwrite. Update only the metadata header. Surface drift in any sections the wizard manages and let the user pick adopt/skip per section.
-
-### Step 5: Generate Hooks Directory
-
-Copy hooks from `${CLAUDE_PLUGIN_ROOT}/hooks/` into `.claude/hooks/`:
-
-- `_find-rdlc-root.sh`
-- `rdlc-prompt-check.sh`
-- `instructions-loaded-check.sh`
-- `slop-scan-pretool.sh`
-- `confidence-required.sh`
-- `source-required.sh`
-- `audience-firewall.sh`
-
-Make them executable: `chmod +x .claude/hooks/*.sh`.
-
-### Step 6: Update settings.json
-
-Merge hook configuration into `.claude/settings.json`. Use a smart merge — don't overwrite existing `permissions` or `env` blocks. Add the RDLC hook entries to `hooks` arrays:
-
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      { "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/rdlc-prompt-check.sh" }] }
-    ],
-    "PreToolUse": [
-      { "matcher": "Write|Edit|MultiEdit", "hooks": [
-        { "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/slop-scan-pretool.sh" }
-      ]}
-    ],
-    "SessionStart": [
-      { "hooks": [{ "type": "command", "command": "${CLAUDE_PLUGIN_ROOT}/hooks/instructions-loaded-check.sh" }] }
-    ]
-  }
-}
+```bash
+npx claude-rdlc-wizard init
 ```
+
+This drops, in one idempotent shot:
+
+- `.claude/hooks/*.sh` — all 7 hooks (executable, with shebangs)
+- `.claude/skills/{rdlc,setup,update,feedback}/SKILL.md`
+- `.claude/settings.json` — merged with existing user settings; never clobbers user `permissions` / `env` blocks
+- `RDLC.md` at repo root — wizard default canonical (you will customize it in Step 5)
+- `.gitignore` — appends `.claude/plans/` and `.claude/settings.local.json`
+
+The CLI uses `$CLAUDE_PROJECT_DIR`-style paths so hooks resolve regardless of how Claude Code was launched. If files already exist, init skips them and reports `SKIP` per file. Use `npx claude-rdlc-wizard init --force` ONLY if the user explicitly asked for regenerate.
 
 If the user has `claude-sdlc-wizard` installed, RDLC hooks register *alongside* SDLC hooks. They do not conflict — different gates, different exit conditions.
 
-### Step 7: Generate Scripts (if missing)
+### Step 5: Customize RDLC.md for Detected Domain
+
+The CLI dropped the wizard's default `RDLC.md`. Now adapt it to what Step 1 detected:
+
+- Replace `<!-- Domain: research -->` with the detected preset (`medical-legal | political-research | automotive-audit | general-research`)
+- Update "Source Hierarchy" section with domain-specific tier-1 sources (DrugBank/ChEMBL/PubChem for medical; FEC/Congress for political; NHTSA for automotive; etc.)
+- Update "Audience Firewall" section if multiple deliverables detected (Step 2)
+- Insert the chosen fourth confidence label (UNVERIFIED vs GAP per Step 2-3)
+
+If `RDLC.md` already had user customizations before init: re-apply them. The CLI's idempotency means it skipped your existing file — you may need to manually port new wizard sections into the user's existing canonical.
+
+### Step 6: Generate Scripts (if missing)
 
 Copy templates from `${CLAUDE_PLUGIN_ROOT}/templates/` into `scripts/`:
 
@@ -151,7 +142,7 @@ Copy templates from `${CLAUDE_PLUGIN_ROOT}/templates/` into `scripts/`:
 
 If any script already exists, do not overwrite — surface the diff and let user pick.
 
-### Step 8: Generate .rdlc/ Directory
+### Step 7: Generate .rdlc/ Directory
 
 Create:
 
@@ -161,7 +152,7 @@ Create:
 └── version              # File containing wizard version (0.1.0)
 ```
 
-### Step 9: Memory Entry
+### Step 8: Memory Entry
 
 Write a single `project_rdlc_install.md` to the consumer's memory namespace:
 
@@ -178,19 +169,26 @@ Pairs with: [claude-sdlc-wizard if detected].
 **How to apply:** Invoke /rdlc for any research/fact-check/draft work. Run scripts/regression_test.sh before commit. Cross-model review for high-stakes deliverables.
 ```
 
-### Step 10: Verify Installation
+### Step 9: Verify Installation
 
-Run quick smoke checks:
+Run the CLI's drift check:
 
-- `RDLC.md` exists and parses (markdown syntax check via `awk`)
-- `.claude/hooks/rdlc-prompt-check.sh` exists, executable, has correct shebang
-- `.claude/settings.json` parses (`jq -e .` succeeds)
-- `scripts/regression_test.sh` runs with --help or empty input without error
-- `bash scripts/slop_scan.sh` runs and reports zero hits on the freshly installed RDLC.md (the wizard's own writing must pass its own gate)
+```bash
+npx claude-rdlc-wizard check
+```
+
+Exit 0 = clean (all wizard files present, executable, match wizard versions). Exit 1 = drift (missing files, missing executable bits, or version drift).
+
+Plus skill-specific checks the CLI doesn't cover:
+
+- `scripts/regression_test.sh` runs with empty input without error
+- `bash scripts/slop_scan.sh` reports zero hits on the freshly customized RDLC.md (the wizard's own writing must pass its own gate)
+- `.rdlc/slop-allowlist.txt` and `.rdlc/version` exist
+- `RDLC.md` reflects the detected domain (Step 5 customization actually happened)
 
 If any check fails, surface the failure and offer a fix or rollback.
 
-### Step 11: Restart Notice
+### Step 10: Restart Notice
 
 Print:
 > RDLC Wizard v0.1.0 installed.

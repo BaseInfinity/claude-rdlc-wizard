@@ -1,0 +1,73 @@
+#!/usr/bin/env node
+'use strict';
+
+const { version } = require('../../package.json');
+const { init, check } = require('../init');
+const { detectComplexity } = require('../lib/repo-complexity');
+
+const args = process.argv.slice(2);
+
+const flags = {
+  force: args.includes('--force'),
+  dryRun: args.includes('--dry-run'),
+  json: args.includes('--json'),
+};
+
+const positional = args.filter((a) => !a.startsWith('--'));
+const command = positional[0];
+
+if (args.includes('--version') || args.includes('-v')) {
+  console.log(version);
+  process.exit(0);
+}
+
+if (args.includes('--help') || args.includes('-h') || !command) {
+  console.log(`
+  claude-rdlc-wizard v${version}
+
+  Usage:
+    rdlc-wizard init [options]               Install RDLC wizard into current directory
+    rdlc-wizard check [options]              Check installation health and updates
+    rdlc-wizard complexity [path]            Print research-repo complexity tier
+
+  Options:
+    --force       Overwrite existing files (init only)
+    --dry-run     Preview changes without writing (init only)
+    --json        Output as JSON (check / complexity)
+    --version     Show version
+    --help        Show this help
+  `.trim());
+  process.exit(0);
+}
+
+if (command === 'init') {
+  try {
+    init(process.cwd(), flags);
+    process.exit(0);
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  }
+} else if (command === 'check') {
+  try {
+    const { hasDrift } = check(process.cwd(), { json: flags.json });
+    process.exit(hasDrift ? 1 : 0);
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  }
+} else if (command === 'complexity') {
+  try {
+    const target = positional[1] || process.cwd();
+    const result = detectComplexity(target);
+    process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    process.exit(0);
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(2);
+  }
+} else {
+  console.error(`Unknown command: ${command}`);
+  console.error('Run "rdlc-wizard --help" for usage.');
+  process.exit(1);
+}

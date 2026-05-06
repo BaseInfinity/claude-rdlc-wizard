@@ -2,6 +2,31 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.2.0] - 2026-05-05
+
+### npm CLI
+
+Ports `claude-sdlc-wizard`'s CLI shape to rdlc. The slash-command skills (`/setup`, `/update`, `/feedback`, `/rdlc`) remain the conversational interface; the CLI is the bootstrap layer (terminal-side install + drift detection).
+
+### Added
+
+- `cli/bin/rdlc-wizard.js` — CLI entry, dispatches `init` / `check` / `complexity`
+- `cli/init.js` — exports `init()` and `check()`. Idempotent file-drop with smart `.claude/settings.json` merge (preserves user `permissions` / `env` blocks)
+- `cli/lib/repo-complexity.js` — research-repo complexity heuristic (`deliverables`, `evidence_dirs`, `research_files`, `sources`, `audiences` signals; PII/stakes override forces `complex`)
+- `cli/templates/settings.json` — `$CLAUDE_PROJECT_DIR`-style hook config dropped during `init`
+- `tests/test-cli-init.sh` — 32 assertions covering file-drop, executable bits, idempotency, `--help`, `--version`, `--dry-run`
+- `tests/test-cli-check.sh` — 12 assertions covering MISSING / MATCH / CUSTOMIZED / DRIFT statuses, `--json` output
+- `tests/test-cli-complexity.sh` — 11 assertions covering empty / light / heavy / stakes-override fixtures
+
+### Updated
+
+- `skills/setup/SKILL.md` — Step 4 now delegates skeleton install to `npx claude-rdlc-wizard init`; Step 9 verification uses `npx claude-rdlc-wizard check`. Steps 5-7 (customize RDLC.md, generate scripts, generate `.rdlc/`) stay in the skill — they need scan-driven values the CLI can't infer.
+- `package.json` — version bump to `0.2.0`; the existing `bin: cli/bin/rdlc-wizard.js` declaration now resolves to a real file
+
+### Removed from roadmap
+
+- The originally planned `update` CLI subcommand. `check` covers drift detection; rerunning `init --force` covers reinstall. This mirrors how sdlc-wizard ships (no separate `update` subcommand).
+
 ## [0.1.0] - 2026-05-04
 
 ### Initial bootstrap

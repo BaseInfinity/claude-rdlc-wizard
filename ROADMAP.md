@@ -1,13 +1,15 @@
 # Roadmap
 
-What's queued for claude-rdlc-wizard beyond v0.1.0.
+What's queued for claude-rdlc-wizard beyond v0.2.0.
 
-## v0.2 — npm CLI (no public registry yet)
+## v0.2 — npm CLI ✅ (shipped 2026-05-05)
 
-- [ ] `cli/bin/rdlc-wizard.js` — `init`, `check`, `update`, `complexity` commands
-- [ ] Local install path (`npm link` for development; npm registry deferred to v1.0)
-- [ ] `setup` skill calls the CLI to drop files instead of inline Write loops
-- [ ] First non-originating consumer adopts the wizard (graduation candidate)
+- [x] `cli/bin/rdlc-wizard.js` — `init`, `check`, `complexity` commands
+- [x] Local install path (`npm link` for development; npm registry deferred to v1.0)
+- [x] `setup` skill calls the CLI to drop files instead of inline Write loops
+- [ ] First non-originating consumer adopts the wizard (graduation candidate — moved to v1.0 gate)
+
+Dropped from the original v0.2 plan: a separate `update` CLI subcommand. `check` covers drift detection; `init --force` covers reinstall. Mirrors sdlc-wizard.
 
 ## v0.3 — Setup scan refinement
 
