@@ -137,25 +137,24 @@ The CLI dropped the wizard's default `RDLC.md`. Now adapt it to what Step 1 dete
 
 If `RDLC.md` already had user customizations before init: re-apply them. The CLI's idempotency means it skipped your existing file — you may need to manually port new wizard sections into the user's existing canonical.
 
-### Step 6: Generate Scripts (if missing)
+### Step 6: Verify Scripts and .rdlc/ (Dropped by init)
 
-Copy templates from `${CLAUDE_PLUGIN_ROOT}/templates/` into `scripts/`:
+The CLI's `init` (Step 4) already dropped these as part of the v0.3.2+ scaffold:
 
-- `regression_test.sh.template` → `scripts/regression_test.sh` (executable, with TODO markers for project-specific assertions)
-- `slop_scan.sh.template` → `scripts/slop_scan.sh` (executable)
-- `generate_deliverable.py.template` → `scripts/generate_deliverable.py` (with example deliverable config)
+- `scripts/regression_test.sh` — executable, with TODO markers for project-specific assertions
+- `scripts/slop_scan.sh` — executable, scans `output/`, `research/`, `evidence/`
+- `scripts/generate_deliverable.py` — multi-deliverable generator scaffold
+- `.rdlc/slop-allowlist.txt` — comment-only header; user adds project-specific exemptions
+- `.rdlc/version` — current wizard version, used for drift detection
 
-If any script already exists, do not overwrite — surface the diff and let user pick.
+Re-run `npx claude-rdlc-wizard init` if any are missing (idempotent — won't overwrite). If scripts already existed before init (user customized them), the CLI SKIPped them — surface the diff and let the user decide.
 
-### Step 7: Generate .rdlc/ Directory
+### Step 7: Customize the Allowlist and Regression Suite
 
-Create:
+Now adapt the just-dropped scaffolds to the project:
 
-```
-.rdlc/
-├── slop-allowlist.txt   # Empty file with comment header
-└── version              # File containing wizard version (0.1.0)
-```
+- `.rdlc/slop-allowlist.txt` — add project-specific proper nouns, direct quotes, or domain vocabulary that legitimately matches banned phrases (e.g., a mission pillar named "Empower X").
+- `scripts/regression_test.sh` — replace TODO markers with `check_present` / `check_absent` assertions about facts the project must (or must not) make. Every defect found later becomes a permanent regression.
 
 ### Step 8: Memory Entry
 

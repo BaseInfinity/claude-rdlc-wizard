@@ -118,10 +118,28 @@ function scanResearch(repoPath) {
   const labelCounts = {};
   for (const l of LABELS) labelCounts[l] = 0;
 
+  // v0.3.2: regression_test detection is broader than just scripts/regression_test.sh —
+  // tucson-investigation uses pytest (L5/L12 gates) instead. Treat any of these
+  // as evidence of an existing fact-regression mechanism the consumer brings.
+  const hasRegressionTest =
+    fs.existsSync(path.join(repoRoot, 'scripts/regression_test.sh')) ||
+    fs.existsSync(path.join(repoRoot, 'pytest.ini')) ||
+    fs.existsSync(path.join(repoRoot, 'conftest.py')) ||
+    fs.existsSync(path.join(repoRoot, 'tests')) ||
+    (() => {
+      const pyproject = path.join(repoRoot, 'pyproject.toml');
+      if (!fs.existsSync(pyproject)) return false;
+      try {
+        return /\[tool\.pytest/.test(fs.readFileSync(pyproject, 'utf8'));
+      } catch (_) {
+        return false;
+      }
+    })();
+
   const tooling = {
     sdlc_wizard: false,
     codex: detectCodex(),
-    regression_test: fs.existsSync(path.join(repoRoot, 'scripts/regression_test.sh')),
+    regression_test: hasRegressionTest,
     slop_scan: fs.existsSync(path.join(repoRoot, 'scripts/slop_scan.sh')),
     agents_md: fs.existsSync(path.join(repoRoot, 'AGENTS.md')),
     claude_md: fs.existsSync(path.join(repoRoot, 'CLAUDE.md')),

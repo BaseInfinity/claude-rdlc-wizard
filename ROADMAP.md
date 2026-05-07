@@ -11,13 +11,16 @@ What's queued for claude-rdlc-wizard beyond v0.2.0.
 
 Dropped from the original v0.2 plan: a separate `update` CLI subcommand. `check` covers drift detection; `init --force` covers reinstall. Mirrors sdlc-wizard.
 
-## v0.3 — Setup scan refinement ✅ (shipped 2026-05-06)
+## v0.3 — Setup scan refinement ✅ (shipped 2026-05-06; v0.3.2 = one-shot consumer install)
 
 - [x] Replace the narrative scan list with a confidence-driven scanner mirroring sdlc-wizard's setup — now `cli/lib/scan-research.js` + `rdlc-wizard scan` subcommand
 - [x] Detect domain (medical/legal vs political vs automotive vs general) from file patterns and propose a preset — domain scoring with `general-research` baseline ensures sane default
 - [x] Auto-detect existing confidence-label conventions; offer to standardize — `confidence_labels` counts + `convention_in_use` flag
+- [x] **v0.3.2 (one-shot install):** `init` now drops `scripts/regression_test.sh`, `scripts/slop_scan.sh`, `scripts/generate_deliverable.py`, `.rdlc/slop-allowlist.txt`, and `.rdlc/version` so a fresh consumer install requires zero template-hunting
+- [x] **v0.3.2 (heuristic fixes):** complexity counts root-level paired `*.md` deliverables; scan detects pytest as regression mechanism
+- [x] **v0.3.2 (path scrubbing):** removed stale `~/rdlc/` references from skills
 
-Setup skill Step 1 now reads a structured JSON map instead of executing a narrative checklist. Reduces hallucination surface (the skill can't miss a check the scanner ran).
+Setup skill Step 1 reads a structured JSON map instead of executing a narrative checklist. Reduces hallucination surface (the skill can't miss a check the scanner ran). Step 6 now verifies init dropped scaffolds; Step 7 is for project-specific customization.
 
 ## v0.4 — Codex adapter
 

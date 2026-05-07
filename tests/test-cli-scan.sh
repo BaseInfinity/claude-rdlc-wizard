@@ -133,6 +133,23 @@ out_scope2=$(node "$CLI" scan "$TMPDIR_TEST" 2>&1)
 assert "scope: research/ .md does count VERIFIED" 'echo "$out_scope2" | jq -e ".confidence_labels.VERIFIED == 1" >/dev/null'
 rm -rf "$TMPDIR_TEST"
 
+# --- Scenario 7b: pytest counts as regression_test (v0.3.2) ---
+TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-scan-pytest-XXXXXX")
+mkdir -p "$TMPDIR_TEST/tests"
+echo "def test_x(): pass" > "$TMPDIR_TEST/tests/test_x.py"
+out_pytest=$(node "$CLI" scan "$TMPDIR_TEST" 2>&1)
+assert "pytest tests/ dir counts as regression_test" 'echo "$out_pytest" | jq -e ".tooling.regression_test == true" >/dev/null'
+rm -rf "$TMPDIR_TEST"
+
+TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-scan-pyproject-XXXXXX")
+cat > "$TMPDIR_TEST/pyproject.toml" <<'EOF'
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+EOF
+out_pyproject=$(node "$CLI" scan "$TMPDIR_TEST" 2>&1)
+assert "pyproject.toml [tool.pytest] counts as regression_test" 'echo "$out_pyproject" | jq -e ".tooling.regression_test == true" >/dev/null'
+rm -rf "$TMPDIR_TEST"
+
 # --- Scenario 8: nonexistent path → exit non-zero ---
 node "$CLI" scan /this/path/should/not/exist >/dev/null 2>&1; exit_bad=$?
 assert "nonexistent path: non-zero exit" '[ "$exit_bad" -ne 0 ]'

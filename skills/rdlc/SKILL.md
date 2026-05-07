@@ -389,4 +389,4 @@ Example: states-project-research had `check_absent` for "Biden" because a fabric
 - After committing a deliverable, `/clear` before next task
 
 ---
-**Full reference:** `RDLC.md` (consumer canonical with project-specific source tiers), `~/rdlc/README.md` (cross-case-study patterns), `~/xdlc/docs/cross-model-review.md` (mission-first prompt structure), `~/rdlc/CASE_STUDIES.md` (anticheat / states-project / tucson — what each proved).
+**Full reference:** `RDLC.md` (consumer canonical with project-specific source tiers); upstream — `claude-rdlc-wizard`'s `PATTERNS.md` (cross-case-study patterns) and `CASE_STUDIES.md` (anticheat / states-project / tucson — what each proved); `~/xdlc/docs/cross-model-review.md` (mission-first prompt structure).

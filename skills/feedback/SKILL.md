@@ -98,7 +98,7 @@ This is the load-bearing feedback type for graduation. When a consumer earns a n
 
 1. Ask user to describe the earned rule (situation, what they did, what they would have wished the wizard told them)
 2. Ask which case study it most resembles (anticheat / states-project / tucson / new domain)
-3. With permission, check if the rule already exists in `RDLC.md` "Lessons Learned" or in `~/rdlc/CASE_STUDIES.md`
+3. With permission, check if the rule already exists in `RDLC.md` "Lessons Learned" or in the wizard repo's `CASE_STUDIES.md`
 4. Create issue tagged `earned-rule-candidate` for playbook author review
 
 ## Creating the Issue

@@ -74,6 +74,18 @@ for skill in rdlc setup update feedback; do
   assert ".claude/skills/$skill/SKILL.md created" '[ -f "$TMPDIR_TEST/.claude/skills/$skill/SKILL.md" ]'
 done
 
+# --- Scripts (v0.3.2: init now drops these from templates) ---
+assert "scripts/regression_test.sh created" '[ -f "$TMPDIR_TEST/scripts/regression_test.sh" ]'
+assert "scripts/regression_test.sh is executable" '[ -x "$TMPDIR_TEST/scripts/regression_test.sh" ]'
+assert "scripts/slop_scan.sh created" '[ -f "$TMPDIR_TEST/scripts/slop_scan.sh" ]'
+assert "scripts/slop_scan.sh is executable" '[ -x "$TMPDIR_TEST/scripts/slop_scan.sh" ]'
+assert "scripts/generate_deliverable.py created" '[ -f "$TMPDIR_TEST/scripts/generate_deliverable.py" ]'
+
+# --- .rdlc/ directory ---
+assert ".rdlc/slop-allowlist.txt created" '[ -f "$TMPDIR_TEST/.rdlc/slop-allowlist.txt" ]'
+assert ".rdlc/version created" '[ -f "$TMPDIR_TEST/.rdlc/version" ]'
+assert ".rdlc/version contains semver" 'grep -qE "^[0-9]+\.[0-9]+\.[0-9]+$" "$TMPDIR_TEST/.rdlc/version"'
+
 # --- gitignore ---
 assert ".gitignore created" '[ -f "$TMPDIR_TEST/.gitignore" ]'
 assert ".gitignore has .claude/plans/" 'grep -qF ".claude/plans/" "$TMPDIR_TEST/.gitignore"'

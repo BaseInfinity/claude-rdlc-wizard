@@ -95,6 +95,23 @@ function detectComplexity(repoPath) {
       if (parent === 'output' && filePath.includes(`${path.sep}output${path.sep}`)) {
         deliverables++;
       }
+      // v0.3.2: also count root-level *.md files that have a paired *.html or
+      // *.pdf alongside (e.g., tucson-investigation has car_report.{md,html,pdf}
+      // at root, never created an output/ dir). The render-pairing pattern is
+      // a strong "deliverable" signal regardless of directory location.
+      const ext = path.extname(name);
+      if (
+        ext === '.md' &&
+        path.dirname(rel) === '.' &&
+        !/^(README|CHANGELOG|CLAUDE|SDLC|RDLC|ARCHITECTURE|ROADMAP|TESTING|AGENTS|HANDOFF|PATTERNS|EXTRACTION_NOTES|WIZARD_PLAN|CASE_STUDIES|CONTRIBUTING|CI_CD|CODEX_.*|SCORE_TRENDS|COMPETITIVE_AUDIT|CODE_REVIEW_EXCEPTIONS|RESEARCH_.*|AUTOCOMPACT_BENCHMARK|ISSUES_FOUND_BY_CODEX|BRANDING)\.md$/i.test(name)
+      ) {
+        const stem = name.slice(0, -3);
+        const htmlPair = path.join(repoRoot, stem + '.html');
+        const pdfPair = path.join(repoRoot, stem + '.pdf');
+        if (fs.existsSync(htmlPair) || fs.existsSync(pdfPair)) {
+          deliverables++;
+        }
+      }
       if (parent === 'research' && filePath.includes(`${path.sep}research${path.sep}`)) {
         researchFiles++;
       }

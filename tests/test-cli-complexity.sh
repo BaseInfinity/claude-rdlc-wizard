@@ -76,7 +76,25 @@ assert "stakes file: tier overridden to complex" 'echo "$out_stakes" | jq -e ".t
 assert "stakes file: signals include override" 'echo "$out_stakes" | jq -e ".signals | map(select(. == \"override:stakes-forces-complex\")) | length == 1" >/dev/null'
 rm -rf "$TMPDIR_TEST"
 
-# --- Scenario 5: nonexistent path → exit 2 ---
+# --- Scenario 5b: root-level deliverables (no output/ dir) — v0.3.2 ---
+# Catches v0.3.1 dogfood finding: tucson stores car_report.{md,html,pdf} at root.
+TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-complexity-rootdeliv-XXXXXX")
+mkdir -p "$TMPDIR_TEST/research"
+echo "research notes" > "$TMPDIR_TEST/research/notes.md"
+# Render-paired root-level deliverables (md + html siblings)
+for stem in car_report dads_cheatsheet dealer_audit; do
+  echo "deliverable" > "$TMPDIR_TEST/$stem.md"
+  echo "<html></html>" > "$TMPDIR_TEST/$stem.html"
+done
+# Excluded — meta docs at root with html siblings should NOT count
+echo "readme" > "$TMPDIR_TEST/README.md"
+echo "<html>readme</html>" > "$TMPDIR_TEST/README.html"
+out_root=$(node "$CLI" complexity "$TMPDIR_TEST" 2>&1)
+assert "root-level paired deliverables: deliverables count >= 3" 'echo "$out_root" | jq -e ".signals[] | select(test(\"deliverables:[3-9]\"))" >/dev/null'
+assert "root-level: README.md does NOT count as deliverable" 'echo "$out_root" | jq -e ".signals[] | select(test(\"deliverables:[0-9]+\"))" | jq -e ". | test(\"deliverables:[3-4] \") or test(\"deliverables:3 \")" >/dev/null'
+rm -rf "$TMPDIR_TEST"
+
+# --- Scenario 6: nonexistent path → exit 2 ---
 node "$CLI" complexity /this/path/should/not/exist >/dev/null 2>&1; exit_bad=$?
 assert "nonexistent path: exit 2" '[ "$exit_bad" -eq 2 ]'
 

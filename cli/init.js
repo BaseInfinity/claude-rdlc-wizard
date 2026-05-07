@@ -32,6 +32,15 @@ const FILES = [
   { src: 'skills/setup/SKILL.md', dest: '.claude/skills/setup/SKILL.md', base: REPO_ROOT },
   { src: 'skills/update/SKILL.md', dest: '.claude/skills/update/SKILL.md', base: REPO_ROOT },
   { src: 'skills/feedback/SKILL.md', dest: '.claude/skills/feedback/SKILL.md', base: REPO_ROOT },
+
+  // v0.3.2: scripts/ and .rdlc/ — previously the /setup skill expected to copy
+  // these from `${CLAUDE_PLUGIN_ROOT}/templates/`, which doesn't resolve for CLI
+  // installs. Now `init` drops them directly. Templates carry TODO markers; the
+  // /setup skill walks the user through customizing them in Step 7.
+  { src: 'templates/regression_test.sh.template', dest: 'scripts/regression_test.sh', executable: true, base: REPO_ROOT },
+  { src: 'templates/slop_scan.sh.template', dest: 'scripts/slop_scan.sh', executable: true, base: REPO_ROOT },
+  { src: 'templates/generate_deliverable.py.template', dest: 'scripts/generate_deliverable.py', base: REPO_ROOT },
+  { src: 'templates/slop-allowlist.txt.template', dest: '.rdlc/slop-allowlist.txt', base: REPO_ROOT },
 ];
 
 const WIZARD_HOOK_MARKERS = FILES
@@ -176,12 +185,30 @@ function printOps(ops) {
   }
 }
 
+// .rdlc/version is dynamic (always reflects the current wizard version), so it
+// lives outside FILES and gets written separately. /update uses this file as a
+// quick drift check independent of the RDLC.md metadata header.
+function writeVersionFile(targetDir, force) {
+  const versionPath = path.join(targetDir, '.rdlc', 'version');
+  const exists = fs.existsSync(versionPath);
+  const wizardVersion = require('../package.json').version;
+  if (exists && !force) {
+    return { action: 'SKIP', relativeDest: '.rdlc/version' };
+  }
+  fs.mkdirSync(path.dirname(versionPath), { recursive: true });
+  fs.writeFileSync(versionPath, wizardVersion + '\n');
+  return { action: exists ? 'OVERWRITE' : 'CREATE', relativeDest: '.rdlc/version' };
+}
+
 function init(targetDir, { force = false, dryRun = false } = {}) {
   const ops = planOperations(targetDir, { force });
 
   if (dryRun) {
     console.log('Dry run — no files will be written:\n');
     printOps(ops);
+    const versionExists = fs.existsSync(path.join(targetDir, '.rdlc', 'version'));
+    const versionAction = versionExists ? (force ? 'OVERWRITE' : 'SKIP') : 'CREATE';
+    printOps([{ action: versionAction, relativeDest: '.rdlc/version' }]);
     const gitignoreAdds = updateGitignore(targetDir, { dryRun: true });
     if (gitignoreAdds.length > 0) {
       console.log(`  ${GREEN}APPEND${RESET}  .gitignore (${gitignoreAdds.join(', ')})`);
@@ -192,7 +219,10 @@ function init(targetDir, { force = false, dryRun = false } = {}) {
   console.log('');
   printOps(ops);
 
-  if (ops.every((o) => o.action === 'SKIP')) {
+  const versionOp = writeVersionFile(targetDir, force);
+  printOps([versionOp]);
+
+  if (ops.every((o) => o.action === 'SKIP') && versionOp.action === 'SKIP') {
     console.log('\nAll files already exist. Use --force to overwrite.');
     return true;
   }

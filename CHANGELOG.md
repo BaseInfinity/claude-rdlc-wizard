@@ -2,6 +2,36 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.3.2] - 2026-05-06
+
+### One-shot consumer install
+
+The tucson dogfood revealed three friction points the v0.3.1 setup flow exposed: (1) the `/setup` skill referenced `${CLAUDE_PLUGIN_ROOT}/templates/` which doesn't resolve for CLI installs; (2) the CLI didn't ship `scripts/` or `.rdlc/` at all, so users had to hand-port templates; (3) two stale `~/rdlc/` paths pointed at the retired pattern repo.
+
+After v0.3.2, `rdlc-wizard init` is a complete consumer install in one command — no template-hunting required.
+
+### Added (init now drops these)
+
+- `scripts/regression_test.sh` — fact-regression scaffold with `check_present` / `check_absent` helpers (executable, with TODO markers for project-specific assertions)
+- `scripts/slop_scan.sh` — banned-phrase grep over `output/` / `research/` / `evidence/` (executable)
+- `scripts/generate_deliverable.py` — multi-deliverable generator scaffold with audience-firewall enforcement
+- `.rdlc/slop-allowlist.txt` — project-specific allowlist with comment header
+- `.rdlc/version` — current wizard version, written dynamically (used by `/update` for drift detection independent of the RDLC.md metadata header)
+
+### Changed
+
+- `cli/lib/repo-complexity.js` — also counts root-level `*.md` files that have a paired `*.html` or `*.pdf` sibling. Catches the tucson layout (`car_report.{md,html,pdf}` at root, no `output/` dir). Excludes well-known meta docs (README, CHANGELOG, CLAUDE, SDLC, RDLC, etc.) so docs don't get miscounted as deliverables.
+- `cli/lib/scan-research.js` — `tooling.regression_test` is now true for any of: `scripts/regression_test.sh`, `tests/` dir, `pytest.ini`, `conftest.py`, or `pyproject.toml` containing `[tool.pytest...]`. Tucson uses pytest for fact regression instead of a bash script.
+- `skills/setup/SKILL.md` Steps 6-7 — rewritten to "verify init dropped them" instead of "copy from `${CLAUDE_PLUGIN_ROOT}/templates/`". Step 7 is now the customization step (allowlist + assertions).
+- `skills/feedback/SKILL.md` line 101 — replaced `~/rdlc/CASE_STUDIES.md` with the wizard repo's `CASE_STUDIES.md`.
+- `skills/rdlc/SKILL.md` reference footer — replaced `~/rdlc/README.md` and `~/rdlc/CASE_STUDIES.md` with the wizard repo's `PATTERNS.md` and `CASE_STUDIES.md`.
+
+### Tests
+
+- `tests/test-cli-init.sh` — 8 new assertions covering scripts/.rdlc/ (40 total, was 32).
+- `tests/test-cli-complexity.sh` — 2 new assertions for root-level paired deliverables (13 total, was 11).
+- `tests/test-cli-scan.sh` — 2 new assertions for pytest as regression mechanism (28 total, was 26).
+
 ## [0.3.1] - 2026-05-06
 
 ### Fix: scan was counting wizard infrastructure as research signal
