@@ -2,6 +2,21 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.3.1] - 2026-05-06
+
+### Fix: scan was counting wizard infrastructure as research signal
+
+The v0.3.0 dogfood in `~/test-rdlc-consumer/` (which only had wizard files, no actual research) reported `recommended_domain: medical-legal` and `convention_in_use: true` — false positives caused by the wizard's own canonical `RDLC.md` documenting domain presets and confidence labels as examples.
+
+### Changed
+
+- `cli/lib/scan-research.js` — content scans (regex + label counting) now run only on `*.md` files inside `research/`, `evidence/`, `output/`, `sources/`, `.reviews/`. Files at repo root (RDLC.md / CLAUDE.md / AGENTS.md) and in tooling dirs (scripts/ / .claude/ / .rdlc/) are excluded from content scoring — those are wizard or infrastructure files, not research.
+- Path-based domain scoring stays broad — path patterns already require a research-shaped directory (e.g., `evidence/policy_documents`) so they can't drift into wizard infrastructure.
+
+### Tests
+
+- `tests/test-cli-scan.sh` — 6 new scope assertions: root-level `.md` files don't score domains or count labels; moving the same content into `research/` does score it. Total scan tests: 26 (was 20).
+
 ## [0.3.0] - 2026-05-06
 
 ### Setup scan refinement

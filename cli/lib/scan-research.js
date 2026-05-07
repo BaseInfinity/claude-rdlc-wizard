@@ -44,6 +44,24 @@ const DOMAIN_PATTERNS = {
 
 const LABELS = ['VERIFIED', 'SUPPORTED', 'INFERRED', 'UNVERIFIED', 'GAP', 'DIRECT'];
 
+// Content scans (regex + label counts) only run on files inside these top-level
+// directories. Path-based scoring stays broad — a path like
+// `evidence/policy_documents/X.md` already requires the right directory to
+// match, so it can't drift into wizard infrastructure.
+//
+// Why this scope: the wizard's own canonical files (RDLC.md at root, scripts/,
+// .rdlc/, .claude/) document confidence labels and domain-preset names as
+// examples. Without this scope the scanner counts those as if they were real
+// research signals (caught by v0.3.0 dogfood — wizard RDLC.md alone produced
+// medical-legal score of 3 and 47 false-positive label hits).
+const RESEARCH_DIRS = new Set(['research', 'evidence', 'output', 'sources', '.reviews']);
+
+function isInResearchDir(relPath) {
+  if (!relPath) return false;
+  const top = relPath.split(/[\/\\]/)[0];
+  return RESEARCH_DIRS.has(top);
+}
+
 function walk(rootDir, onFile, onDir, visited) {
   let entries;
   try {
@@ -134,7 +152,8 @@ function scanResearch(repoPath) {
       const rel = path.relative(repoRoot, filePath);
       const relPosix = rel.split(path.sep).join('/');
 
-      // Path-based domain signals
+      // Path-based domain signals — broad (path patterns already require a
+      // research-shaped directory like `evidence/policy_documents`)
       for (const [domainName, def] of Object.entries(DOMAIN_PATTERNS)) {
         for (const sub of def.pathSubstrings) {
           if (relPosix.includes(sub)) {
@@ -143,7 +162,12 @@ function scanResearch(repoPath) {
         }
       }
 
-      // Content-based scans (read the file once, apply all greps)
+      // Content-based scans only run inside research dirs (see RESEARCH_DIRS).
+      // Files at repo root (RDLC.md, CLAUDE.md, AGENTS.md) and infrastructure
+      // dirs (scripts/, .claude/, .rdlc/) are wizard or tooling files — their
+      // mention of "PMID" or "VERIFIED" is documentation, not research.
+      if (!isInResearchDir(relPosix)) return;
+
       let content;
       try {
         content = fs.readFileSync(filePath, 'utf8');
@@ -157,7 +181,6 @@ function scanResearch(repoPath) {
         }
       }
 
-      // Confidence-label counting: word-boundary match per label
       for (const label of LABELS) {
         const re = new RegExp(`\\b${label}\\b`, 'g');
         const m = content.match(re);

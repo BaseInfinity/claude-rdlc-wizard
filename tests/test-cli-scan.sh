@@ -113,7 +113,27 @@ out_sdlc=$(node "$CLI" scan "$TMPDIR_TEST" 2>&1)
 assert "sdlc-paired: tooling.sdlc_wizard is true" 'echo "$out_sdlc" | jq -e ".tooling.sdlc_wizard == true" >/dev/null'
 rm -rf "$TMPDIR_TEST"
 
-# --- Scenario 7: nonexistent path → exit non-zero ---
+# --- Scenario 7: files outside research dirs do NOT influence content scoring ---
+# Catches v0.3.0 dogfood finding: wizard's own RDLC.md was bumping medical score.
+TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-scan-scope-XXXXXX")
+echo "Sample: PMID 12345, DrugBank DB001, FEC filing, NHTSA recall." > "$TMPDIR_TEST/RDLC.md"
+echo "VERIFIED claim. SUPPORTED claim. UNVERIFIED claim." > "$TMPDIR_TEST/notes.md"
+mkdir -p "$TMPDIR_TEST/scripts"
+echo "VERIFIED check_present helper" > "$TMPDIR_TEST/scripts/regression_test.sh"
+out_scope=$(node "$CLI" scan "$TMPDIR_TEST" 2>&1)
+assert "scope: root .md does not score medical-legal" 'echo "$out_scope" | jq -e ".domain.\"medical-legal\" == 0" >/dev/null'
+assert "scope: root .md does not score political-research" 'echo "$out_scope" | jq -e ".domain.\"political-research\" == 0" >/dev/null'
+assert "scope: root .md does not score automotive-audit" 'echo "$out_scope" | jq -e ".domain.\"automotive-audit\" == 0" >/dev/null'
+assert "scope: root .md does not count VERIFIED" 'echo "$out_scope" | jq -e ".confidence_labels.VERIFIED == 0" >/dev/null'
+assert "scope: convention_in_use false (no research/evidence files)" 'echo "$out_scope" | jq -e ".confidence_labels.convention_in_use == false" >/dev/null'
+# now move content into research/ — scoring should turn on
+mkdir -p "$TMPDIR_TEST/research"
+mv "$TMPDIR_TEST/notes.md" "$TMPDIR_TEST/research/notes.md"
+out_scope2=$(node "$CLI" scan "$TMPDIR_TEST" 2>&1)
+assert "scope: research/ .md does count VERIFIED" 'echo "$out_scope2" | jq -e ".confidence_labels.VERIFIED == 1" >/dev/null'
+rm -rf "$TMPDIR_TEST"
+
+# --- Scenario 8: nonexistent path → exit non-zero ---
 node "$CLI" scan /this/path/should/not/exist >/dev/null 2>&1; exit_bad=$?
 assert "nonexistent path: non-zero exit" '[ "$exit_bad" -ne 0 ]'
 
