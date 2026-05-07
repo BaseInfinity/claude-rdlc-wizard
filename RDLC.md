@@ -1,4 +1,4 @@
-<!-- RDLC Wizard Version: 0.2.1 -->
+<!-- RDLC Wizard Version: 0.3.0 -->
 <!-- Setup Date: TBD -->
 <!-- Completed Steps: -->
 <!-- Domain: research -->
@@ -11,8 +11,8 @@ This document is installed by `claude-rdlc-wizard` into the consumer repo. It is
 
 | Property | Value |
 |----------|-------|
-| Wizard Version | 0.2.1 |
-| Last Updated | 2026-05-05 |
+| Wizard Version | 0.3.0 |
+| Last Updated | 2026-05-06 |
 | Claude Code Baseline | v2.1.111+ (required for Opus 4.7 / `opus[1m]`) |
 | Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
 | Recommended Effort | `max` for research drafting, `xhigh` for review and verification |

@@ -29,33 +29,38 @@ Follow these steps IN ORDER. Do not skip or combine.
 
 ### Step 1: Auto-Scan the Project
 
-Scan for research signals:
+Run the CLI's scanner once and consume its JSON output for the rest of this skill:
 
-**Directories indicating research repo:**
-- `evidence/`, `evidence/sources/`, `evidence/profiles/`, `evidence/documents/`
-- `research/` (lowercase_with_underscores .md files)
-- `sources/`, `references/`, `citations/`
-- `output/` with HTML or PDF deliverables
-- `.reviews/` with handoff.json or review artifacts
+```bash
+npx claude-rdlc-wizard scan
+```
 
-**Existing RDLC-flavored conventions:**
-- `*.md` files containing `VERIFIED|SUPPORTED|INFERRED|UNVERIFIED|GAP|DIRECT` (confidence labels already in use)
-- `*.md` files with footnoted URLs or PMIDs (citation discipline)
-- A `scripts/regression_test.sh` with `check_present`/`check_absent` patterns
-- A `scripts/slop_scan.sh` or similar grep-based content gate
-- `.reviews/handoff.json` or `.reviews/preflight-*.md` artifacts
-- Cross-model review skill (`.claude/skills/codex-review/`) or similar
+The scanner returns a structured signal map you'll use to skip questions you don't need to ask:
 
-**Domain indicators (for domain-adaptive RDLC.md):**
-- Medical/legal: `evidence/team_profiles/`, GRADE labels, PMIDs, DrugBank/ChEMBL/PubChem references → `medical-legal` preset
-- Political/research: `evidence/policy_documents/`, FEC filings, organizational chart references → `political-research` preset
-- Automotive/audit: NHTSA TSB references, dealer invoices, recall numbers → `automotive-audit` preset
-- General research: default — everything else
+```json
+{
+  "domain": { "medical-legal": N, "political-research": N,
+              "automotive-audit": N, "general-research": N },
+  "recommended_domain": "<highest-scoring>",
+  "confidence_labels": { "VERIFIED": N, ..., "convention_in_use": <bool> },
+  "tooling": { "sdlc_wizard": <bool>, "codex": <bool>,
+               "regression_test": <bool>, "slop_scan": <bool>,
+               "agents_md": <bool>, "claude_md": <bool>, "rdlc_md": <bool> },
+  "structure": { "has_evidence": <bool>, "has_research": <bool>,
+                 "has_sources": <bool>, "has_output": <bool>,
+                 "has_reviews": <bool>, "has_scripts": <bool> }
+}
+```
 
-**Existing tooling:**
-- `claude-sdlc-wizard` already installed (look for `SDLC.md` + `.claude/hooks/sdlc-prompt-check.sh`) — RDLC pairs with it, doesn't replace it
-- `AGENTS.md` (cross-tool agent-instructions) — RDLC overlaps and needs the dual-maintain decision
-- `CLAUDE.md` already exists — RDLC adds an `## RDLC` section, doesn't overwrite
+**How signals map to behavior:**
+
+- `domain.recommended_domain` → preset for Step 5's RDLC.md customization. Confirm with the user but default to it.
+- `confidence_labels.convention_in_use == true` → user already labels claims. List the counts and offer to standardize on the dominant 4-label set; do NOT impose a different vocabulary.
+- `tooling.sdlc_wizard == true` → don't fight `claude-sdlc-wizard`'s hooks; register alongside (the CLI's settings.json merge handles this — flag the pairing in the memory entry).
+- `tooling.agents_md == true` → surface the dual-maintain decision (CLAUDE.md alongside AGENTS.md). Default: keep both, sync manually.
+- `structure.has_*` flags → drive whether Step 6 (scripts) and Step 7 (.rdlc/) need creation or already exist.
+
+**Anti-pattern check:** if every `domain.*` score is 0 except `general-research`, the repo is too bare to auto-detect a preset confidently — ASK the user for the domain instead of defaulting silently.
 
 ### Step 2: Build Confidence Map
 

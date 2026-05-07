@@ -2,6 +2,27 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.3.0] - 2026-05-06
+
+### Setup scan refinement
+
+The `/setup` skill no longer hand-rolls signal detection inline — it calls a new CLI subcommand and consumes structured JSON. This replaces the v0.2 narrative-style scan with a concrete, testable signal map.
+
+### Added
+
+- `cli/lib/scan-research.js` — research signal scanner with four kinds of output:
+  - `domain` scores (`medical-legal`, `political-research`, `automotive-audit`, `general-research`) with content + path heuristics; `general-research` carries a baseline 1 to win ties
+  - `confidence_labels` counts (`VERIFIED`, `SUPPORTED`, `INFERRED`, `UNVERIFIED`, `GAP`, `DIRECT`) plus a `convention_in_use` flag (true at ≥3 total label hits)
+  - `tooling` flags: `sdlc_wizard`, `codex`, `regression_test`, `slop_scan`, `agents_md`, `claude_md`, `rdlc_md`
+  - `structure` flags: presence of `evidence/` / `research/` / `sources/` / `output/` / `.reviews/` / `scripts/`
+- `rdlc-wizard scan [path]` CLI subcommand emitting the JSON
+- `tests/test-cli-scan.sh` — 20 assertions covering empty / political / medical / automotive / labels-in-use / sdlc-paired / nonexistent-path scenarios
+
+### Changed
+
+- `skills/setup/SKILL.md` Step 1 — replaced the narrative directory + content checklist with a single `npx claude-rdlc-wizard scan` call; the rest of the skill consumes that JSON output. Reduces ambiguity (was: "look for these signals"; now: "read these fields").
+- Anti-pattern check added: if every domain score except `general-research` is 0, the skill MUST ask the user for the domain rather than silently defaulting to general-research.
+
 ## [0.2.1] - 2026-05-05
 
 ### Fix: hook name collision with sdlc-wizard

@@ -11,11 +11,13 @@ What's queued for claude-rdlc-wizard beyond v0.2.0.
 
 Dropped from the original v0.2 plan: a separate `update` CLI subcommand. `check` covers drift detection; `init --force` covers reinstall. Mirrors sdlc-wizard.
 
-## v0.3 — Setup scan refinement
+## v0.3 — Setup scan refinement ✅ (shipped 2026-05-06)
 
-- [ ] Replace the v0.1 5-row signal table with a confidence-driven scanner mirroring sdlc-wizard's setup
-- [ ] Detect domain (medical/legal vs political vs automotive vs general) from file patterns and propose a preset
-- [ ] Auto-detect existing confidence-label conventions; offer to standardize
+- [x] Replace the narrative scan list with a confidence-driven scanner mirroring sdlc-wizard's setup — now `cli/lib/scan-research.js` + `rdlc-wizard scan` subcommand
+- [x] Detect domain (medical/legal vs political vs automotive vs general) from file patterns and propose a preset — domain scoring with `general-research` baseline ensures sane default
+- [x] Auto-detect existing confidence-label conventions; offer to standardize — `confidence_labels` counts + `convention_in_use` flag
+
+Setup skill Step 1 now reads a structured JSON map instead of executing a narrative checklist. Reduces hallucination surface (the skill can't miss a check the scanner ran).
 
 ## v0.4 — Codex adapter
 

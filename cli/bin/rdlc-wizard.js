@@ -4,6 +4,7 @@
 const { version } = require('../../package.json');
 const { init, check } = require('../init');
 const { detectComplexity } = require('../lib/repo-complexity');
+const { scanResearch } = require('../lib/scan-research');
 
 const args = process.argv.slice(2);
 
@@ -28,12 +29,13 @@ if (args.includes('--help') || args.includes('-h') || !command) {
   Usage:
     rdlc-wizard init [options]               Install RDLC wizard into current directory
     rdlc-wizard check [options]              Check installation health and updates
+    rdlc-wizard scan [path]                  Print research signals for /setup to consume
     rdlc-wizard complexity [path]            Print research-repo complexity tier
 
   Options:
     --force       Overwrite existing files (init only)
     --dry-run     Preview changes without writing (init only)
-    --json        Output as JSON (check / complexity)
+    --json        Output as JSON (check / scan / complexity)
     --version     Show version
     --help        Show this help
   `.trim());
@@ -60,6 +62,16 @@ if (command === 'init') {
   try {
     const target = positional[1] || process.cwd();
     const result = detectComplexity(target);
+    process.stdout.write(JSON.stringify(result, null, 2) + '\n');
+    process.exit(0);
+  } catch (err) {
+    console.error(`Error: ${err.message}`);
+    process.exit(2);
+  }
+} else if (command === 'scan') {
+  try {
+    const target = positional[1] || process.cwd();
+    const result = scanResearch(target);
     process.stdout.write(JSON.stringify(result, null, 2) + '\n');
     process.exit(0);
   } catch (err) {
