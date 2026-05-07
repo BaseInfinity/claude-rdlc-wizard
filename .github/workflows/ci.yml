@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: Install jq (needed by hook + cli tests)
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: test-cli-init
+        run: bash tests/test-cli-init.sh
+
+      - name: test-cli-check
+        run: bash tests/test-cli-check.sh
+
+      - name: test-cli-complexity
+        run: bash tests/test-cli-complexity.sh
+
+      - name: test-cli-scan
+        run: bash tests/test-cli-scan.sh
+
+      - name: test-hooks
+        run: bash tests/test-hooks.sh
+
+      - name: test-templates
+        run: bash tests/test-templates.sh
+
+      - name: test-slop-scan
+        run: bash tests/test-slop-scan.sh
