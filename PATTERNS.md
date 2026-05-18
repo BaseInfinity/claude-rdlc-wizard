@@ -175,6 +175,7 @@ Reference repo: `~/anticheat` — a medical/legal evidence system with 96 resear
 - Compound/claim verification against primary database (not just citation check)
 - Audience boundary enforcement (clinical language doesn't leak to family pages)
 - Mission context required in every cross-model handoff prompt (success/failure/audience/stakes)
+- **Color-balance / consumability gate (May 8, 2026)** — for any project using a semantic-color system (per-token color carries meaning; see anticheat's `BRANDING.md`), enforce two regressions: (a) per-page, no single color may exceed 80% of all colored-span uses (catches "wall of yellow / wall of red" drift where the palette collapses to "colorful" with zero semantic signal); (b) per-paragraph, no single `<p>` may use all five palette colors at once (the OG "rainbow paragraph" anti-pattern). Anticheat shipped this as `tests/test_color_balance.py` after a Codex review chain explicitly flagged hl-yellow over-use on the strategy pages — the pattern surfaced because *Stefan is the consumer of his own pages* and noticed the readability problem before any reader did. Generalizes: **data is worthless if no one reads it; consumability is a first-class lifecycle gate, not a post-launch polish step.** Parking-lot under XDLC rule (case study #1 in anticheat); awaiting a second case study before extracting to a cross-DLC hook.
 
 ### What Should Become Skills
 
