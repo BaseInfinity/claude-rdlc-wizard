@@ -39,8 +39,10 @@ echo ""
 if [ ! -f "$CLI" ]; then echo "SKIP: CLI not built"; exit 1; fi
 if ! command -v node >/dev/null 2>&1; then echo "SKIP: node not installed"; exit 0; fi
 
-# --- Preset file existence (the canonical lives in the repo) ---
+# --- Preset file existence (the canonicals live in the repo) ---
 assert "presets/ directory exists" '[ -d "$ROOT/presets" ]'
+
+# medical-legal preset (from anticheat)
 assert "presets/medical-legal/RDLC.md exists" '[ -f "$ROOT/presets/medical-legal/RDLC.md" ]'
 assert "medical preset RDLC.md mentions GRADE" 'grep -q "GRADE" "$ROOT/presets/medical-legal/RDLC.md"'
 assert "medical preset RDLC.md mentions DrugBank" 'grep -q "DrugBank" "$ROOT/presets/medical-legal/RDLC.md"'
@@ -48,12 +50,33 @@ assert "medical preset RDLC.md mentions ChEMBL" 'grep -q "ChEMBL" "$ROOT/presets
 assert "medical preset RDLC.md mentions PubChem" 'grep -q "PubChem" "$ROOT/presets/medical-legal/RDLC.md"'
 assert "medical preset RDLC.md mentions openFDA" 'grep -q "openFDA" "$ROOT/presets/medical-legal/RDLC.md"'
 assert "medical preset RDLC.md declares Domain: medical-legal" 'grep -q "Domain: medical-legal" "$ROOT/presets/medical-legal/RDLC.md"'
-# GRADE-aligned uncertainty labels (from anticheat)
 assert "medical preset RDLC.md has GRADE quality scale" 'grep -qE "Very Low.*Low.*Moderate.*High|GRADE: (Very Low|Low|Moderate|High)" "$ROOT/presets/medical-legal/RDLC.md"'
+
+# political-research preset (from states-project-research)
+assert "presets/political-research/RDLC.md exists" '[ -f "$ROOT/presets/political-research/RDLC.md" ]'
+assert "political preset declares Domain: political-research" 'grep -q "Domain: political-research" "$ROOT/presets/political-research/RDLC.md"'
+assert "political preset mentions FEC" 'grep -q "FEC" "$ROOT/presets/political-research/RDLC.md"'
+assert "political preset mentions Congressional records" 'grep -qE "Congress(ional)? (records|\\.gov)" "$ROOT/presets/political-research/RDLC.md"'
+assert "political preset mentions 990 forms" 'grep -qE "990 form|IRS Form 990|990s" "$ROOT/presets/political-research/RDLC.md"'
+assert "political preset mentions OpenSecrets" 'grep -q "OpenSecrets" "$ROOT/presets/political-research/RDLC.md"'
+assert "political preset has VERIFIED/SUPPORTED/INFERRED/UNVERIFIED labels" 'grep -q "VERIFIED" "$ROOT/presets/political-research/RDLC.md" && grep -q "SUPPORTED" "$ROOT/presets/political-research/RDLC.md" && grep -q "INFERRED" "$ROOT/presets/political-research/RDLC.md" && grep -q "UNVERIFIED" "$ROOT/presets/political-research/RDLC.md"'
+assert "political preset mentions mock-interview leak prevention" 'grep -qE "mock.interview|mock_" "$ROOT/presets/political-research/RDLC.md"'
+
+# automotive-audit preset (from tucson-investigation)
+assert "presets/automotive-audit/RDLC.md exists" '[ -f "$ROOT/presets/automotive-audit/RDLC.md" ]'
+assert "automotive preset declares Domain: automotive-audit" 'grep -q "Domain: automotive-audit" "$ROOT/presets/automotive-audit/RDLC.md"'
+assert "automotive preset mentions NHTSA" 'grep -q "NHTSA" "$ROOT/presets/automotive-audit/RDLC.md"'
+assert "automotive preset mentions TSB" 'grep -q "TSB" "$ROOT/presets/automotive-audit/RDLC.md"'
+assert "automotive preset mentions VIN" 'grep -q "VIN" "$ROOT/presets/automotive-audit/RDLC.md"'
+assert "automotive preset has DIRECT label" 'grep -q "DIRECT" "$ROOT/presets/automotive-audit/RDLC.md"'
+assert "automotive preset has GAP label as first-class" 'grep -qE "GAP.*structurally unknowable|GAP.*record does not exist" "$ROOT/presets/automotive-audit/RDLC.md"'
+assert "automotive preset mentions methodology-leak gate" 'grep -qE "methodology.leak|methodology never|methodology in the wrong" "$ROOT/presets/automotive-audit/RDLC.md"'
+assert "automotive preset mentions persona tests" 'grep -qE "persona|Playwright" "$ROOT/presets/automotive-audit/RDLC.md"'
 
 # --- Help surface ---
 help_out=$(node "$CLI" --help 2>&1 || true)
 assert "--help mentions --preset flag" 'echo "$help_out" | grep -q -- "--preset"'
+assert "--help lists all 3 presets" 'echo "$help_out" | grep -q "medical-legal" && echo "$help_out" | grep -q "political-research" && echo "$help_out" | grep -q "automotive-audit"'
 
 # --- Scenario A: explicit --preset medical-legal ---
 TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-preset-explicit-XXXXXX")
@@ -73,6 +96,34 @@ echo "GRADE: high quality evidence" > "$TMPDIR_TEST/evidence/team_profiles/exper
 assert "auto medical: RDLC.md installed" '[ -f "$TMPDIR_TEST/RDLC.md" ]'
 assert "auto medical: installed RDLC.md is medical-legal variant (not generic)" 'grep -q "Domain: medical-legal" "$TMPDIR_TEST/RDLC.md"'
 rm -rf "$TMPDIR_TEST"
+
+# --- Scenario B2: auto-detect from political signals ---
+TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-preset-auto-pol-XXXXXX")
+mkdir -p "$TMPDIR_TEST/evidence/policy_documents" "$TMPDIR_TEST/research"
+echo "FEC filing reference 2024-Q3" > "$TMPDIR_TEST/evidence/policy_documents/fec.md"
+echo "Congressional record: H.R. 1234, S. 567" > "$TMPDIR_TEST/research/congress.md"
+(cd "$TMPDIR_TEST" && node "$CLI" init >/dev/null 2>&1)
+assert "auto political: RDLC.md installed" '[ -f "$TMPDIR_TEST/RDLC.md" ]'
+assert "auto political: installed RDLC.md is political-research variant" 'grep -q "Domain: political-research" "$TMPDIR_TEST/RDLC.md"'
+rm -rf "$TMPDIR_TEST"
+
+# --- Scenario B3: auto-detect from automotive signals ---
+TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-preset-auto-auto-XXXXXX")
+mkdir -p "$TMPDIR_TEST/evidence" "$TMPDIR_TEST/research"
+echo "NHTSA TSB 24-01-049 — recall 24V-123" > "$TMPDIR_TEST/research/recall.md"
+echo "Dealer invoice for service work — VIN ABC123" > "$TMPDIR_TEST/evidence/invoice.md"
+(cd "$TMPDIR_TEST" && node "$CLI" init >/dev/null 2>&1)
+assert "auto automotive: RDLC.md installed" '[ -f "$TMPDIR_TEST/RDLC.md" ]'
+assert "auto automotive: installed RDLC.md is automotive-audit variant" 'grep -q "Domain: automotive-audit" "$TMPDIR_TEST/RDLC.md"'
+rm -rf "$TMPDIR_TEST"
+
+# --- Scenario B4: explicit --preset for all 3 presets ---
+for p in medical-legal political-research automotive-audit; do
+  TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-preset-explicit-${p}-XXXXXX")
+  (cd "$TMPDIR_TEST" && node "$CLI" init --preset "$p" >/dev/null 2>&1)
+  assert "explicit preset $p: installed correct variant" 'grep -q "Domain: '"$p"'" "$TMPDIR_TEST/RDLC.md"'
+  rm -rf "$TMPDIR_TEST"
+done
 
 # --- Scenario C: empty/no-signal dir → generic RDLC.md (NOT a preset) ---
 TMPDIR_TEST=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-preset-generic-XXXXXX")

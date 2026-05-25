@@ -2,36 +2,52 @@
 
 All notable changes to claude-rdlc-wizard.
 
-## [0.6.0] - 2026-05-24
+## [0.6.0] - 2026-05-24 (medical) / 2026-05-25 (political + automotive)
 
-### Per-domain presets (first preset: medical-legal)
+### Per-domain presets (v0.6 complete: all 3 detected domains have shipped bundles)
 
-The wizard now installs a domain-specific RDLC.md when the scanner detects strong signals for a known domain. First preset shipped: **medical-legal**, extracted from the `anticheat` case study (160 commits, 316 tests). v0.4 (Codex adapter) and v0.5 (cross-validate) are intentionally skipped for now — Claude-side preset work is higher-leverage than cross-tool plumbing without a new consumer.
+The wizard now installs a domain-specific RDLC.md when the scanner detects strong signals for a known domain. All three domains the scanner already detects (medical-legal, political-research, automotive-audit) ship with full preset bundles. v0.4 (Codex adapter) and v0.5 (cross-validate) are intentionally skipped — Claude-side preset work is higher-leverage than cross-tool plumbing without a new consumer.
 
-### Added
+### Added — Preset infrastructure
 
-- `presets/medical-legal/RDLC.md` — full medical/legal canonical with:
-  - Two-axis claim labeling: GRADE evidence-quality (Very Low / Low / Moderate / High) alongside VERIFIED/SUPPORTED/INFERRED/UNVERIFIED claim confidence. The split is load-bearing — a VERIFIED claim can rest on GRADE: Very Low evidence (single in vitro study). Source: `CASE_STUDIES.md:178`.
-  - Tier-1 source hierarchy = primary databases only (DrugBank, ChEMBL, PubChem, openFDA, RxNorm, UNII). PubMed papers move to tier 3.
-  - Standard medical audience-firewall mapping (clinical / patient / legal / internal deliverables).
-  - Certification/provider-eligibility queue pattern (`.rdlc/certification-queue.md` with recheck dates).
-  - Inherited regression checks for known mechanism mislabels (creatine/GABA-A class).
 - `cli/init.js` — `resolvePreset()` + `listAvailablePresets()`. Explicit `--preset` overrides auto-detect; auto-detect runs `scanResearch().recommended_domain` and uses the preset if one exists.
 - `cli/bin/rdlc-wizard.js` — `--preset <name>` flag (also accepts `--preset=<name>`). Unknown preset exits 2 without writing. `--help` lists available presets.
-- `tests/test-cli-preset.sh` — 21 assertions covering preset file content, explicit `--preset`, auto-detect, generic fallback, explicit override of auto-detect, and unknown-preset error.
-
-### Changed
-
+- `tests/test-cli-preset.sh` — 46 assertions covering all 3 preset files' content, explicit `--preset` for each, auto-detect from synthetic signal repos for each, generic fallback, explicit override of auto-detect, and unknown-preset error.
 - `package.json` — adds `presets/` to the `files` array so it ships in the npm tarball.
+
+### Added — `presets/medical-legal/RDLC.md` (from anticheat)
+
+- Two-axis claim labeling: GRADE evidence-quality (Very Low / Low / Moderate / High) alongside VERIFIED/SUPPORTED/INFERRED/UNVERIFIED claim confidence. The split is load-bearing — a VERIFIED claim can rest on GRADE: Very Low evidence (single in vitro study). Source: `CASE_STUDIES.md:178`.
+- Tier-1 source hierarchy = primary databases only (DrugBank, ChEMBL, PubChem, openFDA, RxNorm, UNII). PubMed papers move to tier 3.
+- Standard medical audience-firewall mapping (clinical / patient / legal / internal deliverables).
+- Certification/provider-eligibility queue pattern (`.rdlc/certification-queue.md` with recheck dates).
+- Inherited regression checks for known mechanism mislabels (creatine/GABA-A class).
+
+### Added — `presets/political-research/RDLC.md` (from states-project-research)
+
+- VERIFIED/SUPPORTED/INFERRED/UNVERIFIED labels (UNVERIFIED as fourth — political research deals with public records, structurally-unknowable GAP rarely applies).
+- Tier-1 source hierarchy = primary public records only (FEC filings, IRS 990 forms, Congressional records, court filings via CourtListener/PACER). OpenSecrets/FollowTheMoney drop to tier 3 — they aggregate primary data and drift.
+- Multi-audience interview-prep firewall: internal/mock vs subject-facing vs sponsor-facing vs public, with mock-interview/salary/probe-for content permanently firewalled from subject-facing deliverables.
+- Three-round Codex review protocol (factual / audience-as-reviewer / stakes-aware) mandatory for subject-facing material.
+- Leak-regression class: every time mock-interview or salary content leaked into a subject-facing draft, the assertion becomes permanent.
+
+### Added — `presets/automotive-audit/RDLC.md` (from tucson-investigation)
+
+- Four-label split with GAP as first-class: DIRECT (first-hand observation) / SUPPORTED (TSB/recall) / INFERRED (deduction from DIRECT+SUPPORTED) / GAP (record structurally doesn't exist — distinct from UNVERIFIED).
+- Tier-1 source hierarchy = manufacturer TSBs by ID + NHTSA recall PDFs by number. Forum threads quote TSBs; cite the TSB itself.
+- Multi-audience firewall plus **methodology-leak gate**: dealer-facing and public deliverables must contain ZERO mentions of investigation methodology. Enforced at generator + regression-suite level.
+- Persona-based regression tests via Playwright (`tests/test_personas.py` pattern) — each HTML deliverable walked from the perspective of its target persona (owner / mechanic / dealer).
+- Up to 9 Codex review rounds for dealer-audit material (vs. 2-3 for diagnostic) — every round catches a real issue until the dealer-side counterpart can't find a foothold.
 
 ### Tests
 
-- 21 new preset assertions; all existing suites still green (init 40, scan 28, check 12, complexity 13, hooks 19, templates 6).
+- 46 preset assertions (was 21 in initial medical-legal ship); all existing suites still green (init 40, scan 28, check 12, complexity 13, hooks 19, templates 6). Total: 164 assertions passing.
 
 ### Not addressed
 
 - `tests/test-slop-scan.sh` has pre-existing unset-variable issues in subshells (fails on `main` before this change). Flagged for separate cleanup.
-- Political-research and automotive-audit presets — scanner already detects them; preset bundles deferred until a consumer earns the rules.
+- Journalism preset — scanner doesn't detect it yet (no JDLC case study in flight).
+- Legal-only signal detection (NDA/MSA/contract clauses) — current `medical-legal` preset name implies both, but the scanner only detects medical signals. Pure-legal repos like `contract-review-kit` install the generic RDLC.md. Naming/scope decision deferred.
 
 ## [0.3.2] - 2026-05-06
 

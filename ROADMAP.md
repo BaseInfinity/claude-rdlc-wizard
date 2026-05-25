@@ -35,14 +35,20 @@ Setup skill Step 1 reads a structured JSON map instead of executing a narrative 
 - [ ] Convergence detection (2-round sweet spot, 3 max, escalate after that)
 - [ ] Audience-as-reviewer prompt variant for tone-sensitive deliverables
 
-## v0.6 — Per-domain presets (in progress; medical-legal shipped 2026-05-24)
+## v0.6 — Per-domain presets ✅ (shipped 2026-05-24 / 2026-05-25)
 
-- [x] **Medical/legal (shipped 2026-05-24, v0.6.0):** Two-axis labeling (GRADE evidence-quality × VERIFIED/SUPPORTED claim-confidence), primary-database tier-1 (DrugBank, ChEMBL, PubChem, openFDA, RxNorm, UNII), standard audience-firewall mapping (clinical/patient/legal/internal), certification queue pattern. Auto-installed via `init` when the scanner detects medical signals, or explicitly via `init --preset medical-legal`. Source: anticheat case study.
-- [ ] Political/research: VERIFIED/SUPPORTED/INFERRED/UNVERIFIED, source-tier hierarchy (FEC/Congress tier-1). Scanner already detects; preset bundle deferred until earned.
-- [ ] Automotive/audit: DIRECT/SUPPORTED/INFERRED/GAP, persona Playwright tests. Scanner already detects; preset bundle deferred until earned.
+All 3 domains the scanner already detects now ship with full preset bundles. Journalism remains deferred — needs a case study to earn the rules.
+
+- [x] **Medical/legal (shipped 2026-05-24, v0.6.0):** Two-axis labeling (GRADE evidence-quality × VERIFIED/SUPPORTED claim-confidence), primary-database tier-1 (DrugBank, ChEMBL, PubChem, openFDA, RxNorm, UNII), standard audience-firewall mapping (clinical/patient/legal/internal), certification queue pattern. Source: anticheat case study.
+- [x] **Political/research (shipped 2026-05-25, v0.6.0):** VERIFIED/SUPPORTED/INFERRED/UNVERIFIED labels, primary-public-record tier-1 (FEC, IRS 990, Congress.gov, court filings), multi-audience interview-prep firewall (internal/subject/sponsor/public) with mock-interview leak prevention, 3-round Codex protocol (factual / audience-as-reviewer / stakes-aware). Source: states-project-research case study.
+- [x] **Automotive/audit (shipped 2026-05-25, v0.6.0):** DIRECT/SUPPORTED/INFERRED/GAP labels (GAP first-class), manufacturer-TSB/NHTSA tier-1, methodology-leak gate (dealer/public deliverables can't leak investigation methodology), persona-based Playwright regression tests, up to 9-round Codex review for dealer-audit material. Source: tucson-investigation case study.
 - [ ] Journalism: TBD — emerges from JDLC parking lot once first journalism case study lands
 
-**v0.6 ship pattern (established by medical-legal):** `presets/<name>/RDLC.md` is a full canonical (not an overlay). `init` auto-installs the preset when `scanResearch().recommended_domain` matches and the preset exists; `--preset <name>` overrides. Future presets follow the same shape — copy the medical template, retune Source Hierarchy + audience mapping + regression assertions for the domain.
+**v0.6 ship pattern (established):** `presets/<name>/RDLC.md` is a full canonical (not an overlay). `init` auto-installs the preset when `scanResearch().recommended_domain` matches and the preset exists; `--preset <name>` overrides. Future presets follow the same shape — copy an existing preset, retune Source Hierarchy + audience mapping + regression assertions for the domain.
+
+**v0.6 surfaced these candidates for follow-up versions:**
+- **Legal-only signal detection** — `contract-review-kit` (legal/contract) installs generic RDLC.md because the scanner only detects medical signals, not legal signals (NDA, MSA, EDGAR, CourtListener). The `medical-legal` preset name implies both; either split into `medical` + `legal` or add legal-signal detection. Deferred until a non-originating consumer requests it.
+- **First non-originating consumer install** — `contract-review-kit`, `fixbot-audit`, and `pdlc` are candidates. Dry-run shows clean install. v1.0 graduation evidence.
 
 ## v1.0 — Graduation
 
