@@ -14,6 +14,50 @@ const CYAN = '\x1b[36m';
 const REPO_ROOT = path.join(__dirname, '..');
 const TEMPLATES_DIR = path.join(__dirname, 'templates');
 const RDLC_DOC = path.join(REPO_ROOT, 'RDLC.md');
+const PRESETS_DIR = path.join(REPO_ROOT, 'presets');
+
+// v0.6: presets. Auto-detected from scanResearch().recommended_domain unless the
+// user passes --preset explicitly. The general-research "preset" is the base
+// RDLC.md — no override needed.
+function listAvailablePresets() {
+  if (!fs.existsSync(PRESETS_DIR)) return [];
+  return fs.readdirSync(PRESETS_DIR, { withFileTypes: true })
+    .filter((d) => d.isDirectory() && fs.existsSync(path.join(PRESETS_DIR, d.name, 'RDLC.md')))
+    .map((d) => d.name);
+}
+
+function presetRdlcPath(presetName) {
+  return path.join(PRESETS_DIR, presetName, 'RDLC.md');
+}
+
+function resolvePreset(targetDir, explicitPreset) {
+  // Explicit --preset overrides auto-detect. general-research means "use base".
+  if (explicitPreset) {
+    if (explicitPreset === 'general-research') return null;
+    const available = listAvailablePresets();
+    if (!available.includes(explicitPreset)) {
+      const err = new Error(
+        `Unknown preset: "${explicitPreset}". Available: ${available.join(', ') || '(none)'}, general-research`
+      );
+      err.code = 'UNKNOWN_PRESET';
+      throw err;
+    }
+    return explicitPreset;
+  }
+  // Auto-detect via the scanner. Fall back to base on any error.
+  try {
+    const { scanResearch } = require('./lib/scan-research');
+    const result = scanResearch(targetDir);
+    const recommended = result.recommended_domain;
+    if (recommended && recommended !== 'general-research') {
+      const available = listAvailablePresets();
+      if (available.includes(recommended)) return recommended;
+    }
+  } catch (_) {
+    // Scanner failure shouldn't break install — just use base.
+  }
+  return null;
+}
 
 // Skills + hooks live at repo root (single source of truth for both plugin and CLI).
 // Only settings.json lives in cli/templates/ — it's the CLI-install-specific hook config.
@@ -91,7 +135,7 @@ function mergeSettings(existingPath, templatePath, force) {
   }
 }
 
-function planOperations(targetDir, { force }) {
+function planOperations(targetDir, { force, preset }) {
   const ops = [];
 
   for (const file of FILES) {
@@ -123,13 +167,15 @@ function planOperations(targetDir, { force }) {
     });
   }
 
-  // RDLC.md canonical doc at repo root
+  // RDLC.md canonical — preset variant if one resolved, else base canonical
+  const rdlcSrc = preset ? presetRdlcPath(preset) : RDLC_DOC;
   const rdlcDest = path.join(targetDir, 'RDLC.md');
   const rdlcExists = fs.existsSync(rdlcDest);
+  const rdlcLabel = preset ? `RDLC.md (preset: ${preset})` : 'RDLC.md';
   ops.push({
-    src: RDLC_DOC,
+    src: rdlcSrc,
     dest: rdlcDest,
-    relativeDest: 'RDLC.md',
+    relativeDest: rdlcLabel,
     action: rdlcExists ? (force ? 'OVERWRITE' : 'SKIP') : 'CREATE',
     executable: false,
   });
@@ -200,11 +246,17 @@ function writeVersionFile(targetDir, force) {
   return { action: exists ? 'OVERWRITE' : 'CREATE', relativeDest: '.rdlc/version' };
 }
 
-function init(targetDir, { force = false, dryRun = false } = {}) {
-  const ops = planOperations(targetDir, { force });
+function init(targetDir, { force = false, dryRun = false, preset = null } = {}) {
+  // Resolve preset (explicit overrides auto-detect). Throws UNKNOWN_PRESET if
+  // the user passed --preset with an unknown name — caller decides how to surface.
+  const resolvedPreset = resolvePreset(targetDir, preset);
+  const ops = planOperations(targetDir, { force, preset: resolvedPreset });
 
   if (dryRun) {
     console.log('Dry run — no files will be written:\n');
+    if (resolvedPreset) {
+      console.log(`  ${MAGENTA}Preset:${RESET} ${resolvedPreset}${preset ? ' (explicit)' : ' (auto-detected)'}\n`);
+    }
     printOps(ops);
     const versionExists = fs.existsSync(path.join(targetDir, '.rdlc', 'version'));
     const versionAction = versionExists ? (force ? 'OVERWRITE' : 'SKIP') : 'CREATE';
@@ -217,6 +269,9 @@ function init(targetDir, { force = false, dryRun = false } = {}) {
   }
 
   console.log('');
+  if (resolvedPreset) {
+    console.log(`  ${MAGENTA}Preset:${RESET} ${resolvedPreset}${preset ? ' (explicit)' : ' (auto-detected from research signals)'}\n`);
+  }
   printOps(ops);
 
   const versionOp = writeVersionFile(targetDir, force);
@@ -338,4 +393,4 @@ function check(targetDir, { json = false } = {}) {
   return { results, updateInfo, hasDrift };
 }
 
-module.exports = { init, check, planOperations, GITIGNORE_ENTRIES };
+module.exports = { init, check, planOperations, listAvailablePresets, GITIGNORE_ENTRIES };

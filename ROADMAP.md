@@ -35,12 +35,14 @@ Setup skill Step 1 reads a structured JSON map instead of executing a narrative 
 - [ ] Convergence detection (2-round sweet spot, 3 max, escalate after that)
 - [ ] Audience-as-reviewer prompt variant for tone-sensitive deliverables
 
-## v0.6 — Per-domain presets
+## v0.6 — Per-domain presets (in progress; medical-legal shipped 2026-05-24)
 
-- [ ] Medical/legal: GRADE-aligned evidence labels, primary-database verification (DrugBank, ChEMBL, PubChem, openFDA)
-- [ ] Political/research: VERIFIED/SUPPORTED/INFERRED/UNVERIFIED, source-tier hierarchy
-- [ ] Automotive/audit: DIRECT/SUPPORTED/INFERRED/GAP, persona Playwright tests
+- [x] **Medical/legal (shipped 2026-05-24, v0.6.0):** Two-axis labeling (GRADE evidence-quality × VERIFIED/SUPPORTED claim-confidence), primary-database tier-1 (DrugBank, ChEMBL, PubChem, openFDA, RxNorm, UNII), standard audience-firewall mapping (clinical/patient/legal/internal), certification queue pattern. Auto-installed via `init` when the scanner detects medical signals, or explicitly via `init --preset medical-legal`. Source: anticheat case study.
+- [ ] Political/research: VERIFIED/SUPPORTED/INFERRED/UNVERIFIED, source-tier hierarchy (FEC/Congress tier-1). Scanner already detects; preset bundle deferred until earned.
+- [ ] Automotive/audit: DIRECT/SUPPORTED/INFERRED/GAP, persona Playwright tests. Scanner already detects; preset bundle deferred until earned.
 - [ ] Journalism: TBD — emerges from JDLC parking lot once first journalism case study lands
+
+**v0.6 ship pattern (established by medical-legal):** `presets/<name>/RDLC.md` is a full canonical (not an overlay). `init` auto-installs the preset when `scanResearch().recommended_domain` matches and the preset exists; `--preset <name>` overrides. Future presets follow the same shape — copy the medical template, retune Source Hierarchy + audience mapping + regression assertions for the domain.
 
 ## v1.0 — Graduation
 

@@ -2,6 +2,37 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.6.0] - 2026-05-24
+
+### Per-domain presets (first preset: medical-legal)
+
+The wizard now installs a domain-specific RDLC.md when the scanner detects strong signals for a known domain. First preset shipped: **medical-legal**, extracted from the `anticheat` case study (160 commits, 316 tests). v0.4 (Codex adapter) and v0.5 (cross-validate) are intentionally skipped for now — Claude-side preset work is higher-leverage than cross-tool plumbing without a new consumer.
+
+### Added
+
+- `presets/medical-legal/RDLC.md` — full medical/legal canonical with:
+  - Two-axis claim labeling: GRADE evidence-quality (Very Low / Low / Moderate / High) alongside VERIFIED/SUPPORTED/INFERRED/UNVERIFIED claim confidence. The split is load-bearing — a VERIFIED claim can rest on GRADE: Very Low evidence (single in vitro study). Source: `CASE_STUDIES.md:178`.
+  - Tier-1 source hierarchy = primary databases only (DrugBank, ChEMBL, PubChem, openFDA, RxNorm, UNII). PubMed papers move to tier 3.
+  - Standard medical audience-firewall mapping (clinical / patient / legal / internal deliverables).
+  - Certification/provider-eligibility queue pattern (`.rdlc/certification-queue.md` with recheck dates).
+  - Inherited regression checks for known mechanism mislabels (creatine/GABA-A class).
+- `cli/init.js` — `resolvePreset()` + `listAvailablePresets()`. Explicit `--preset` overrides auto-detect; auto-detect runs `scanResearch().recommended_domain` and uses the preset if one exists.
+- `cli/bin/rdlc-wizard.js` — `--preset <name>` flag (also accepts `--preset=<name>`). Unknown preset exits 2 without writing. `--help` lists available presets.
+- `tests/test-cli-preset.sh` — 21 assertions covering preset file content, explicit `--preset`, auto-detect, generic fallback, explicit override of auto-detect, and unknown-preset error.
+
+### Changed
+
+- `package.json` — adds `presets/` to the `files` array so it ships in the npm tarball.
+
+### Tests
+
+- 21 new preset assertions; all existing suites still green (init 40, scan 28, check 12, complexity 13, hooks 19, templates 6).
+
+### Not addressed
+
+- `tests/test-slop-scan.sh` has pre-existing unset-variable issues in subshells (fails on `main` before this change). Flagged for separate cleanup.
+- Political-research and automotive-audit presets — scanner already detects them; preset bundles deferred until a consumer earns the rules.
+
 ## [0.3.2] - 2026-05-06
 
 ### One-shot consumer install

@@ -2,19 +2,35 @@
 'use strict';
 
 const { version } = require('../../package.json');
-const { init, check } = require('../init');
+const { init, check, listAvailablePresets } = require('../init');
 const { detectComplexity } = require('../lib/repo-complexity');
 const { scanResearch } = require('../lib/scan-research');
 
 const args = process.argv.slice(2);
 
+// --preset takes a value: `--preset medical-legal` (next arg) or `--preset=medical-legal`.
+function readValueFlag(name) {
+  const eqIdx = args.findIndex((a) => a.startsWith(`${name}=`));
+  if (eqIdx !== -1) return args[eqIdx].slice(name.length + 1);
+  const idx = args.indexOf(name);
+  if (idx !== -1 && idx + 1 < args.length && !args[idx + 1].startsWith('--')) {
+    return args[idx + 1];
+  }
+  return null;
+}
+
 const flags = {
   force: args.includes('--force'),
   dryRun: args.includes('--dry-run'),
   json: args.includes('--json'),
+  preset: readValueFlag('--preset'),
 };
 
-const positional = args.filter((a) => !a.startsWith('--'));
+// Positional args exclude flags AND the value that follows --preset.
+const presetValueIdx = flags.preset && !args.some((a) => a.startsWith('--preset='))
+  ? args.indexOf('--preset') + 1
+  : -1;
+const positional = args.filter((a, i) => !a.startsWith('--') && i !== presetValueIdx);
 const command = positional[0];
 
 if (args.includes('--version') || args.includes('-v')) {
@@ -23,6 +39,8 @@ if (args.includes('--version') || args.includes('-v')) {
 }
 
 if (args.includes('--help') || args.includes('-h') || !command) {
+  const presets = listAvailablePresets();
+  const presetList = presets.length > 0 ? [...presets, 'general-research'].join(' | ') : 'general-research';
   console.log(`
   claude-rdlc-wizard v${version}
 
@@ -33,11 +51,14 @@ if (args.includes('--help') || args.includes('-h') || !command) {
     rdlc-wizard complexity [path]            Print research-repo complexity tier
 
   Options:
-    --force       Overwrite existing files (init only)
-    --dry-run     Preview changes without writing (init only)
-    --json        Output as JSON (check / scan / complexity)
-    --version     Show version
-    --help        Show this help
+    --force            Overwrite existing files (init only)
+    --dry-run          Preview changes without writing (init only)
+    --preset <name>    Install a domain-specific RDLC.md preset (init only)
+                       Available: ${presetList}
+                       Default: auto-detect via the scanner (falls back to general)
+    --json             Output as JSON (check / scan / complexity)
+    --version          Show version
+    --help             Show this help
   `.trim());
   process.exit(0);
 }
@@ -48,7 +69,7 @@ if (command === 'init') {
     process.exit(0);
   } catch (err) {
     console.error(`Error: ${err.message}`);
-    process.exit(1);
+    process.exit(err.code === 'UNKNOWN_PRESET' ? 2 : 1);
   }
 } else if (command === 'check') {
   try {
