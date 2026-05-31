@@ -60,6 +60,39 @@ assert "rdlc-prompt-check.sh exits 0 outside RDLC project" '(cd /tmp && "$HOOKS/
 # rdlc-instructions-check.sh handles missing RDLC.md
 assert "rdlc-instructions-check.sh handles missing RDLC.md" '(cd /tmp && "$HOOKS/rdlc-instructions-check.sh" >/dev/null)'
 
+# rdlc-prompt-check.sh fires SETUP message when RDLC.md has unresolved
+# "Setup Date: TBD" marker (i.e., npm init dropped preset but /setup-rdlc never ran)
+TMP_TBD=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-hook-tbd-XXXXXX")
+cat > "$TMP_TBD/RDLC.md" <<'TBD'
+<!-- RDLC Wizard Version: 0.6.0 -->
+<!-- Setup Date: TBD -->
+<!-- Completed Steps: -->
+<!-- Domain: medical-legal -->
+
+# RDLC Configuration — Medical/Legal Preset
+Body content so file is non-empty.
+TBD
+assert "rdlc-prompt-check.sh fires SETUP when Setup Date is TBD" \
+  '(cd "$TMP_TBD" && "$HOOKS/rdlc-prompt-check.sh" </dev/null 2>/dev/null | grep -q "RDLC SETUP NOT COMPLETE")'
+rm -rf "$TMP_TBD"
+
+# rdlc-prompt-check.sh fires BASELINE (not SETUP) when Setup Date is filled in
+TMP_DONE=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-hook-done-XXXXXX")
+cat > "$TMP_DONE/RDLC.md" <<'DONE'
+<!-- RDLC Wizard Version: 0.6.0 -->
+<!-- Setup Date: 2026-05-30 -->
+<!-- Completed Steps: 1,2,3,4,5,6,7,8,9,10 -->
+<!-- Domain: medical-legal -->
+
+# RDLC Configuration — Medical/Legal Preset
+Body content so file is non-empty.
+DONE
+assert "rdlc-prompt-check.sh fires BASELINE when Setup Date is filled in" \
+  '(cd "$TMP_DONE" && "$HOOKS/rdlc-prompt-check.sh" </dev/null 2>/dev/null | grep -q "RDLC BASELINE")'
+assert "rdlc-prompt-check.sh does NOT fire SETUP when Setup Date is filled in" \
+  '! (cd "$TMP_DONE" && "$HOOKS/rdlc-prompt-check.sh" </dev/null 2>/dev/null | grep -q "RDLC SETUP NOT COMPLETE")'
+rm -rf "$TMP_DONE"
+
 echo ""
 echo "=== SUMMARY ==="
 echo "PASS: $PASS  /  FAIL: $FAIL"

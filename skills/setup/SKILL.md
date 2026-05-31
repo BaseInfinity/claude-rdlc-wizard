@@ -128,9 +128,11 @@ If the user has `claude-sdlc-wizard` installed, RDLC hooks register *alongside* 
 
 ### Step 5: Customize RDLC.md for Detected Domain
 
-The CLI dropped the wizard's default `RDLC.md`. Now adapt it to what Step 1 detected:
+The CLI dropped the wizard's default `RDLC.md` (or a preset variant). Now adapt it to what Step 1 detected:
 
-- Replace `<!-- Domain: research -->` with the detected preset (`medical-legal | political-research | automotive-audit | general-research`)
+- Replace `<!-- Setup Date: TBD -->` with `<!-- Setup Date: [today's YYYY-MM-DD] -->` — REQUIRED. The `rdlc-prompt-check.sh` hook auto-invokes this skill until `TBD` is replaced; skip the stamp and Claude Code will loop into setup on every prompt.
+- Update `<!-- Completed Steps: -->` with the step numbers as you complete them (e.g. `1,2,3,4,5,6,7,8,9,10` at the end).
+- Replace `<!-- Domain: research -->` with the detected preset (`medical-legal | political-research | automotive-audit | general-research`) if not already correct (presets stamp this themselves).
 - Update "Source Hierarchy" section with domain-specific tier-1 sources (DrugBank/ChEMBL/PubChem for medical; FEC/Congress for political; NHTSA for automotive; etc.)
 - Update "Audience Firewall" section if multiple deliverables detected (Step 2)
 - Insert the chosen fourth confidence label (UNVERIFIED vs GAP per Step 2-3)

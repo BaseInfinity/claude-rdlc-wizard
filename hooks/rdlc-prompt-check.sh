@@ -39,6 +39,22 @@ SETUP
     exit 0
 fi
 
+# Preset RDLC.md is non-empty but customization still pending. The wizard's
+# init step drops a preset (e.g. medical-legal) and stamps `Setup Date: TBD`
+# into the metadata header; /setup-rdlc fills that in when customization
+# finishes. Treat TBD as "setup not complete" so the skill auto-invokes.
+if grep -q '<!-- Setup Date: TBD -->' "$PROJECT_DIR/RDLC.md" 2>/dev/null; then
+    cat << 'SETUP'
+RDLC SETUP NOT COMPLETE: RDLC.md is installed but not customized (Setup Date: TBD).
+
+MANDATORY FIRST ACTION: Invoke Skill tool, skill="setup-rdlc"
+The preset canonical is in place but bespoke customization (source hierarchy
+tuning, audience mapping, regression assertions) has not been run yet.
+Tell the user: "I need to run the RDLC setup wizard to finish customizing the preset for this repo."
+SETUP
+    exit 0
+fi
+
 cat << 'EOF'
 RDLC BASELINE:
 1. SOURCE every claim — primary databases first, watchdog/secondary last

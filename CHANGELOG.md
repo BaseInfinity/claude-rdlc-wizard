@@ -2,6 +2,18 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.6.1] - 2026-05-30
+
+### Fixed — Auto-invoke pattern closes the loop on preset installs
+
+`npx claude-rdlc-wizard init` (v0.6.0) drops a non-empty preset RDLC.md, but the `rdlc-prompt-check.sh` hook only auto-invoked `/setup-rdlc` when RDLC.md was missing or empty. Net effect: presets installed cleanly but bespoke customization never auto-triggered — user had to type `/setup-rdlc` manually, breaking the self-adaptive sdlc-wizard pattern this wizard mirrors.
+
+- `hooks/rdlc-prompt-check.sh` — second trigger added: fires SETUP message when RDLC.md contains `<!-- Setup Date: TBD -->`. The hook now distinguishes "no canonical at all" (missing/empty file) from "canonical installed but not customized yet" (TBD stamp).
+- `skills/setup/SKILL.md` — Step 5 now explicitly tells the skill to replace `<!-- Setup Date: TBD -->` with today's date as part of customization. Without the stamp, the skill would auto-invoke forever; this closes the loop.
+- `tests/test-hooks.sh` — three new assertions (TBD fires SETUP, filled-in date fires BASELINE, filled-in date does NOT fire SETUP). 22 passing.
+
+End-to-end flow restored: `npx claude-rdlc-wizard init` → restart Claude Code → first prompt → hook detects TBD → auto-invokes `/setup-rdlc` → skill customizes + stamps date → subsequent prompts get BASELINE.
+
 ## [0.6.0] - 2026-05-24 (medical) / 2026-05-25 (political + automotive)
 
 ### Per-domain presets (v0.6 complete: all 3 detected domains have shipped bundles)
