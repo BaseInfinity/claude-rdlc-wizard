@@ -13,8 +13,8 @@ This document is installed by `claude-rdlc-wizard` into the consumer repo. It is
 |----------|-------|
 | Wizard Version | 0.3.2 |
 | Last Updated | 2026-05-06 |
-| Claude Code Baseline | v2.1.111+ (required for Opus 4.7 / `opus[1m]`) |
-| Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
+| Claude Code Baseline | v2.1.154+ (required for `claude-opus-4-6[1m]`) |
+| Recommended Model | `claude-opus-4-6[1m]` (Opus 4.6 max) for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
 | Recommended Effort | `max` for research drafting, `xhigh` for review and verification |
 
 ## RDLC Enforcement
