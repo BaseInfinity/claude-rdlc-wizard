@@ -26,6 +26,14 @@
     "cross-model-review"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BaseInfinity/claude-rdlc-wizard.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BaseInfinity/claude-rdlc-wizard/issues"
+  },
+  "homepage": "https://github.com/BaseInfinity/claude-rdlc-wizard#readme",
   "engines": {
     "node": ">=18.0.0"
   }

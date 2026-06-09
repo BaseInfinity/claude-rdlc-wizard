@@ -145,6 +145,13 @@ Reference repo: `~/states-project-research` — a complete RDLC cycle on a real 
 - Cross-model review has diminishing returns on repackaged content — assess ROI before running, don't just run it because the checklist says to
 - "227 tests" hardcoded in docs while actual count grew to 254 — test counts should be dynamic or verified by a test itself
 
+### Review-Process Patterns (added 2026-05-30, aggregated from `~/states-project-research/README.md:472-498`)
+
+- **Overclaim-vs-fabrication asymmetry.** Fabrications are easy to flag because they're wrong. Overclaims — partially true statements with one-word differences between defensible and challengeable — feel correct on first read and routinely survive multiple review rounds. RDLC implication: confidence-required hook should treat "almost-VERIFIED" claims as a separate review class, not as VERIFIED. The expensive defects are the ones that *sound* sourced.
+- **Grade regression across rounds is normal.** Non-monotonic improvement is expected. Round 4 can score lower than round 3 when new scope lands or when a stricter rubric exposes prior over-credit. This is healthy — don't optimize for monotonic scores, optimize for converging-to-truth. RDLC implication: don't add a "no-regression" gate on grade movement; do add a regression on the underlying assertions.
+- **New content resets the quality baseline.** Expanding scope (new section, new audience, new claim type) drops the deliverable's grade until the new material catches up. Treat scope expansion as a fresh review round; pre-existing material doesn't grandfather in.
+- **Cross-model reviewers spotlight different things each run.** Non-determinism across runs is a feature, not a bug — each pass surfaces different blind spots. Don't expect the same reviewer model to find the same issues twice. RDLC implication: budget for ≥2 review rounds per deliverable, treat first-round empty output as luck not signal.
+
 ---
 
 ## Lessons Learned from anticheat (Carlos Ayala Case)
@@ -252,6 +259,40 @@ Sending markdown as plain text email to Gmail renders literal `##` and `---`. Re
 ```
 
 This pattern applies to any lifecycle that produces written content — RDLC, LDLC, even SDLC (code comments, docs, READMEs).
+
+---
+
+## Lessons Learned from fixbot-audit (added 2026-05-30)
+
+Reference repo: `~/fixbot-audit` — a security audit RDLC consumer that ran ~354 audit tests across multiple sweeps and graduated 14 RDLC rules (R1–R14). Source for these patterns: `~/fixbot-audit/ADLC_LEARNINGS.md` (32 L-codes) and `~/fixbot-audit/docs/V2_LESSONS_LEARNED.md` (40 L-codes).
+
+### What Worked
+
+- **Post-graduation rule change-control (R6–R14).** Once an RDLC rule is graduated, new rule additions require either a documented incident (a specific failure the rule prevents) or a measurement (the rule's gate fires on real content). Otherwise the rulebook accretes hypothetical rules that never catch anything. RDLC implication: when a wizard consumer earns rules, the wizard's own promotion-to-default needs the same gate — incident or measurement, never "this seems good."
+
+### What Should Become Hooks
+
+- **Evidence persistence enforced from test 1.** Session-ephemeral evidence (browser MCP screenshots, terminal scrollback, ad-hoc curl output) vanishes when the session ends. fixbot-audit lost proof on 59 of 354 tests because evidence persistence was retrofitted instead of enforced upfront. RDLC implication: any audit/verification hook should write evidence to a durable path (`.reviews/evidence/<test_id>/`) before the assertion fires, not after. The hook fails if evidence-write fails.
+- **PROBED-branch blocker on "audit complete" claims.** Test COUNT is not branch COVERAGE. A test suite with 354 assertions but 12 PROBED (partial-coverage) branches is not complete — it's 354 assertions with 12 open holes. Pre-publish gate: scan for `PROBED` markers in the test corpus; any non-zero count blocks the "audit complete" status.
+
+### Anti-Patterns Discovered
+
+- **Regex auto-eval as verdict, not first-pass signal.** fixbot-audit measured a ~60% false-positive rate on CRITICAL findings classified purely by regex. The slop-scan and source-required hooks in this wizard use regex; consumers should treat hits as triage candidates, not verdicts. The wizard's docs should call this out — every regex CRITICAL needs AI or human evidence-alignment verification before it goes in a deliverable.
+- **`fullPage: true` screenshots silently truncate inner scroll containers.** Generic capture tools assume document-height = visible-height. Multi-pane deliverables (sidebar + main + chat panel) lose content inside the inner scrollable region. RDLC implication: when an audit deliverable depends on screenshot evidence, verify the capture covers all scroll containers, not just the document.
+
+---
+
+## Lessons Learned from frozen (added 2026-05-30)
+
+Reference repo: `~/frozen` — a legal/disclosure RDLC consumer (dated 2026-05-31 in its own RDLC.md). Smaller consumer than fixbot-audit but produced load-bearing operational lessons.
+
+### What Worked
+
+- **Cross-review catches inflated confidence grades.** Claims labeled HIGH/VERIFIED without a dated, linked evidence artifact were systematically downgraded to MODERATE on review. The label itself is not evidence; the artifact behind it is. RDLC implication: confidence-required hook should require an adjacent evidence-artifact reference (file path or URL with date) for HIGH/VERIFIED labels — not just the presence of the label.
+
+### Anti-Patterns Discovered
+
+- **Wizard installed in subfolder instead of workspace root.** When `npx claude-rdlc-wizard init` runs from a subdirectory, the hooks install at `<subdir>/.claude/hooks/` and never fire for the parent workspace's tool calls. Result: silent gate-bypass for every file outside the subdir. The `/setup` skill should refuse to init when the target dir has a parent `.git/` or `.claude/` until the user explicitly confirms.
 
 ---
 
