@@ -1,7 +1,7 @@
 {
   "name": "claude-rdlc-wizard",
   "version": "0.6.1",
-  "description": "RDLC enforcement for Claude Code — hooks, skills, and wizard setup for research repos. The research-domain sibling of claude-sdlc-wizard.",
+  "description": "RDLC enforcement for Claude Code \u2014 hooks, skills, and wizard setup for research repos. The research-domain sibling of claude-sdlc-wizard.",
   "bin": {
     "rdlc-wizard": "cli/bin/rdlc-wizard.js"
   },
@@ -13,7 +13,8 @@
     "presets/",
     ".claude-plugin/",
     "RDLC.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "AI_SETUP_LANES.md"
   ],
   "keywords": [
     "claude-code",

@@ -98,3 +98,13 @@ See [`CASE_STUDIES.md`](CASE_STUDIES.md) for the full cross-index. Short version
 ## License
 
 MIT
+
+## AI Setup Lanes
+
+Three recommended setups in [`AI_SETUP_LANES.md`](AI_SETUP_LANES.md):
+
+| Lane | Planner | Driver | Reviewer | When |
+|------|---------|--------|----------|------|
+| **A — Research Premium** | Opus 4.6 max | Opus 4.6 max | GPT-5.5 xhigh | Research drafting, confidence-critical, source evaluation |
+| **B — Research Saver** | Opus 4.6 max | Sonnet (latest) | GPT-5.5 xhigh | Routine drafting, formatting, docs |
+| **C — Research Lite** | You | Haiku 4.5 | None | Data formatting, bibliography, file management, grunt work |
