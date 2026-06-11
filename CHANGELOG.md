@@ -2,6 +2,14 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.7.0] - 2026-06-11
+
+### AI Setup Lanes v2 (ported from sdlc-wizard)
+
+Port of the AI Setup Lanes v2 architecture from `claude-sdlc-wizard`. The setup skill now routes through discrete lanes based on project signals, replacing the monolithic setup flow with targeted paths that reduce time-to-first-value for new installs.
+
+- `AI_SETUP_LANES.md` — full v2 specification with lane definitions, routing logic, and fallback rules
+
 ## [0.6.1] - 2026-05-30
 
 ### Fixed — Auto-invoke pattern closes the loop on preset installs
