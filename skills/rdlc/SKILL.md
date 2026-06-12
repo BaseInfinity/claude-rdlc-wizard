@@ -11,6 +11,8 @@ $ARGUMENTS
 
 Operational checklist. Full protocol lives in `RDLC.md` (consumer canonical) — read it for project-specific source hierarchy and confidence vocabulary.
 
+**If the user requests /rdlc, ALWAYS run the full workflow — even for mechanical tasks.** Never silently skip; if overkill, say so and ask.
+
 ## Full RDLC Checklist
 
 Your FIRST action must be a TodoWrite covering every phase below. Compact form (omit `activeForm` to use the subject as the spinner label):
