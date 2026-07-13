@@ -2,13 +2,60 @@
 
 All notable changes to claude-rdlc-wizard.
 
+## [0.8.0] - 2026-07-12
+
+### Fable self-enforcement audit (issue #9) — the gates now actually gate
+
+A Fable-led audit (mirroring `claude-sdlc-wizard` #436/#437) traced every hook's exit code on every "should block" branch and found the #436 bug class shipped here too: all four PreToolUse gates printed their warnings to **stdout with exit 0** — invisible on PreToolUse (transcript-only) — and in strict mode blocked with an **empty reason** (message on stdout; only stderr reaches Claude on exit 2).
+
+### Fixed — enforcement
+
+- **All four gates** (`slop-scan-pretool`, `confidence-required`, `source-required`, `audience-firewall`): warnings now go to **stderr**; soft mode exits **1** (non-blocking, visible to the user), strict mode exits **2** (blocks, reason fed back to Claude). Previously soft warnings were invisible and strict blocks were reasonless.
+- **`audience-firewall.sh` could never fire**: conf rules use project-relative globs (per the hook's own docs) but Claude Code passes absolute paths — the glob never matched. Paths are now normalized to project-relative before matching. Also: a conf file without a trailing newline silently dropped its last rule; invalid ERE rules are now skipped loudly (stderr) instead of silently.
+- **`audience-firewall.conf` was never installed**: `cli/init.js` now drops `.rdlc/audience-firewall.conf` (the hook is documented as inert-until-populated; before this it was inert, period).
+- **`confidence-required.sh` label bypass**: any uppercase word containing a label substring (SINGAPORE contains GAP) passed the whole edit. Labels now require standalone-word matching.
+- **Path filters tightened**: `*research/*` matched `marketresearch/`; filters are now segment-aware (`*/research/*|research/*`).
+- **Fail-open family closed**: strict mode now fails closed (exit 2, stderr reason) when hooks are installed but RDLC.md is missing, or when `jq` is absent — previously enforcement silently vanished. `find_rdlc_root` prefers the harness-provided `CLAUDE_PROJECT_DIR` over walking up from CWD.
+- **`templates/slop_scan.sh.template` was a no-op as documented**: `SCAN_PATHS=("${@:-output/ research/ evidence/}")` expands to a single nonexistent path when run with no args — exactly the invocation the docs and the baseline hook prescribe. It scanned nothing and passed. Now defaults to the three paths properly.
+- **Hook wiring**: removed dead `"if"` keys (not part of the Claude Code hook schema — path scoping they claimed was fictional) from `hooks/hooks.json` and `cli/templates/settings.json`; anchored the PreToolUse matcher to `^(Write|Edit|MultiEdit)$` (was substring-matching NotebookEdit).
+- Removed the dead `CLAUDE_MODEL` nudge branch in `rdlc-instructions-check.sh` (env var the harness never sets, glob bug that mis-fired against the exact model it recommended, and stale Opus 4.7 guidance).
+
+### Fixed — tests (the gaps that let the above ship)
+
+- `tests/test-slop-scan.sh`: the "clean content passes" assert was structurally vacuous (`$?` evaluated against the assert helper's own last command — literally `[ 0 -eq 0 ]` forever); the hard-fail assert passed even when fixture setup failed. Both now capture and assert real exit codes plus output text; setup hard-aborts on failure; added a no-arg-invocation regression case.
+- `tests/test-hooks-enforcement.sh` (new): 29 assertions tracing exit codes AND stderr routing for every gate branch — strict block, soft warn, clean pass, fail-closed, wiring parity. Mutation-tested (stderr-routing revert → 7 red; firewall glob revert → 4 red; template revert → 1 red).
+- `tests/test-doc-consistency.sh` (new): 84 per-location drift assertions — version stamps across six sites, model guidance (version + codename together, per sdlc-wizard #441), hook-name rename stragglers, banned-phrase list parity, cross-reference resolution.
+- `tests/test-cli-complexity.sh`: the README-exclusion assert accepted the exact failure value it claimed to exclude (`deliverables:[3-4]` matches 4); now asserts the exact count.
+- `tests/test-hooks.sh`: fixed a vacuous negated assertion; outside-project tests now run with `CLAUDE_PROJECT_DIR` cleared.
+- `package.json` gains `npm test` (runs every suite); `.github/workflows/test.yml` (new) runs the full suite on ubuntu + macos — previously **nothing** ran these tests.
+
+### Changed — AI Setup Lanes v3 + GPT-5.6 Sol (issue #10, sync from sdlc-wizard v1.84.0/#441)
+
+- `AI_SETUP_LANES.md` rewritten to v3: four lanes — **A: Sonnet 5 + Fable advisor (recommended)**, B: Opus 4.6 Stability (legacy), C: OpusPlan Hybrid, D: Research Lite — with model-aware effort levels (Sonnet 5 `high` default) replacing blanket `max`.
+- Cross-model reviewer: GPT-5.5 → **GPT-5.6 Sol** at `xhigh` (fallback Terra), across `AI_SETUP_LANES.md`, `README.md`, `RDLC.md`, all three presets, and `templates/RDLC.md.template`. Historical citations (PATTERNS, CASE_STUDIES, WIZARD_PLAN) intentionally untouched.
+- Added the documented non-default reviewer escalation to `max`/Pro for unusually risky PRs.
+- `RDLC.md` gains the Autocompact Tuning section `AI_SETUP_LANES.md` had linked to since v0.7.0 (the link was dangling).
+
+### Fixed — doc drift (17 findings from the docs auditor)
+
+- Version stamps synced to 0.8.0 across `package.json`, `.claude-plugin/plugin.json` (was 0.1.0), `RDLC.md` (was 0.3.2), presets (were 0.6.0), `README.md` (was v0.1.0).
+- v0.2.1 hook rename finally propagated to `templates/RDLC.md.template` (two stragglers).
+- README lane table regenerated (contradicted `AI_SETUP_LANES.md` on Setup A shape and the Lite driver); "five hooks" → six (rdlc-instructions-check was omitted); `/feedback` → `/feedback-rdlc`; stale deferred-list entries removed (presets, CLI, and npm publish all shipped long ago).
+- `cli/init.js` success message pointed at `/setup` (the *SDLC* wizard's skill on paired installs) — now `/setup-rdlc`.
+- Preset hook-trigger tables promised paths the shipped hook never watched (`clinical/`, `recalls/`, `tsb/`, `policy_documents/`) — corrected to the real `research/`/`evidence/` scope.
+- `skills/update/SKILL.md` no longer defers the CLI check to "when the CLI ships" (it shipped at 0.2.0); stale Step-10 references renumbered; `skills/setup/SKILL.md` fossilized "v0.1.0" strings removed.
+- `ARCHITECTURE.md`: repo tree, template table (4 → 6), exit-code semantics, and future-work list brought current.
+- CHANGELOG: 0.7.0 entry corrected (described sdlc-wizard routing features that never shipped here); 0.1.1 moved above 0.1.0 (reverse-chronological order).
+
 ## [0.7.0] - 2026-06-11
 
 ### AI Setup Lanes v2 (ported from sdlc-wizard)
 
-Port of the AI Setup Lanes v2 architecture from `claude-sdlc-wizard`. The setup skill now routes through discrete lanes based on project signals, replacing the monolithic setup flow with targeted paths that reduce time-to-first-value for new installs.
+Port of the AI Setup Lanes v2 model-selection guidance from `claude-sdlc-wizard` v1.83.0: three recommended model triads (Research Premium / Research Saver / Research Lite) with billing notes for the June 15 split.
 
-- `AI_SETUP_LANES.md` — full v2 specification with lane definitions, routing logic, and fallback rules
+- `AI_SETUP_LANES.md` — v2 lane definitions (advisor/driver/reviewer per lane, when-to-use lists, credit-spend guidance)
+
+*(Corrected 2026-07-12: the original entry claimed setup-skill routing logic that never shipped here — that text was copied from sdlc-wizard's changelog.)*
 
 ## [0.6.1] - 2026-05-30
 
@@ -172,6 +219,32 @@ Ports `claude-sdlc-wizard`'s CLI shape to rdlc. The slash-command skills (`/setu
 
 - The originally planned `update` CLI subcommand. `check` covers drift detection; rerunning `init --force` covers reinstall. This mirrors how sdlc-wizard ships (no separate `update` subcommand).
 
+## [0.1.1] - 2026-05-04
+
+### Consolidated `~/rdlc/` into this repo
+
+Mirrors the GDLC retirement pattern (`~/gdlc/` → `claude-gdlc-wizard`). The standalone `~/rdlc/` pattern-catalog repo was retired the same day v0.1.0 shipped because the wizard now owns the canonical home for both methodology and implementation.
+
+### Added (migrated from retired `~/rdlc/`)
+
+- `PATTERNS.md` — pattern catalog and per-case-study lessons learned (was `~/rdlc/README.md`)
+- `CASE_STUDIES.md` — proof-point cross-index + Contributions Inventory (was `~/rdlc/CASE_STUDIES.md`)
+- `EXTRACTION_NOTES.md` — v0.1.0 build journal (was `~/rdlc/EXTRACTION_NOTES.md`)
+- `WIZARD_PLAN.md` — historical implementation plan, marked superseded (was `~/rdlc/WIZARD_PLAN.md`)
+- `HANDOFF.md` — historical pre-build handoff, marked superseded (was `~/rdlc/HANDOFF.md`)
+
+### Updated
+
+- `README.md` — points at in-repo files instead of `~/rdlc/`
+- `CLAUDE.md` — same
+- `ARCHITECTURE.md` — same
+- `ROADMAP.md` — same
+
+### Note
+
+Historical references to `~/rdlc/` inside the migrated files describe the pre-consolidation state and are preserved for context. The retired repo lives at `~/rdlc.archived-2026-05-04/` for recovery; nothing was deleted.
+
+
 ## [0.1.0] - 2026-05-04
 
 ### Initial bootstrap
@@ -204,28 +277,3 @@ Three RDLC case studies cleared the xdlc extraction threshold (anticheat, states
 
 - This release ships before the v1 graduation criteria stated in `PATTERNS.md` (a fourth case study that consumes patterns from this repo). Justification: GDLC followed the same path with `claude-gdlc-wizard` v0.1.0 — the wizard ships *first* so a fourth consumer has something to install. Graduation remains a separate later milestone tied to a non-originating consumer adopting the wizard and producing an earned rule the first three didn't.
 - Templates have been ported from source repos (states-project-research's `regression_test.sh`, the slop scan from `SDLC.md`). This contradicts the original v0 rule "Mine them in place" stated in `PATTERNS.md`. The contradiction is intentional: the wizard cannot install patterns that only live in their birth repos. See ARCHITECTURE.md "Why templates were ported."
-
-## [0.1.1] - 2026-05-04
-
-### Consolidated `~/rdlc/` into this repo
-
-Mirrors the GDLC retirement pattern (`~/gdlc/` → `claude-gdlc-wizard`). The standalone `~/rdlc/` pattern-catalog repo was retired the same day v0.1.0 shipped because the wizard now owns the canonical home for both methodology and implementation.
-
-### Added (migrated from retired `~/rdlc/`)
-
-- `PATTERNS.md` — pattern catalog and per-case-study lessons learned (was `~/rdlc/README.md`)
-- `CASE_STUDIES.md` — proof-point cross-index + Contributions Inventory (was `~/rdlc/CASE_STUDIES.md`)
-- `EXTRACTION_NOTES.md` — v0.1.0 build journal (was `~/rdlc/EXTRACTION_NOTES.md`)
-- `WIZARD_PLAN.md` — historical implementation plan, marked superseded (was `~/rdlc/WIZARD_PLAN.md`)
-- `HANDOFF.md` — historical pre-build handoff, marked superseded (was `~/rdlc/HANDOFF.md`)
-
-### Updated
-
-- `README.md` — points at in-repo files instead of `~/rdlc/`
-- `CLAUDE.md` — same
-- `ARCHITECTURE.md` — same
-- `ROADMAP.md` — same
-
-### Note
-
-Historical references to `~/rdlc/` inside the migrated files describe the pre-consolidation state and are preserved for context. The retired repo lives at `~/rdlc.archived-2026-05-04/` for recovery; nothing was deleted.

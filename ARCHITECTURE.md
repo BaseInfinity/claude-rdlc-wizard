@@ -30,6 +30,7 @@ SDLC handles "is this code correct" (TDD, lint, tests pass). RDLC handles "is th
 ```
 claude-rdlc-wizard/
 ├── README.md               # Public-facing intro
+├── AI_SETUP_LANES.md       # Recommended model/effort lanes (A/B/C/D)
 ├── CLAUDE.md               # Wizard self-instructions (this file's neighbor)
 ├── ARCHITECTURE.md         # This file
 ├── CHANGELOG.md            # Version history
@@ -55,8 +56,12 @@ claude-rdlc-wizard/
 │   ├── RDLC.md.template
 │   ├── regression_test.sh.template
 │   ├── slop_scan.sh.template
-│   └── generate_deliverable.py.template
-├── scripts/                # Maintenance scripts
+│   ├── generate_deliverable.py.template
+│   ├── slop-allowlist.txt.template
+│   └── audience-firewall.conf.template
+├── presets/                # Per-domain RDLC.md flavors (medical-legal, political, automotive)
+├── cli/                    # npm CLI (init/check/update) + settings.json template
+├── .claude-plugin/         # Plugin manifest
 └── tests/                  # Bash + jq test fixtures
 ```
 
@@ -77,7 +82,7 @@ All hooks are POSIX bash, no external dependencies beyond `grep -E`, `jq`, and s
 1. **Walk up from CWD** to find the nearest `RDLC.md` (monorepo support)
 2. **Exit silently** if not in an RDLC repo (no-op in code-only repos)
 3. **Read JSON payload from stdin** (when present, e.g., for `PreToolUse`)
-4. **Apply the gate**: grep, classify, exit 0 (allow) or exit 2 (block with stderr message)
+4. **Apply the gate**: grep, classify, then exit 0 (allow, silent), exit 1 (warn — stderr shown to the user, tool call proceeds), or exit 2 (block — stderr fed back to Claude as the refusal reason; strict mode)
 
 | Hook | Trigger | Gate |
 |------|---------|------|
@@ -88,7 +93,7 @@ All hooks are POSIX bash, no external dependencies beyond `grep -E`, `jq`, and s
 | `source-required.sh` | PreToolUse Write/Edit on research files | Block if a claim is added without a citation/URL |
 | `audience-firewall.sh` | PreToolUse Write to `output/` deliverables | Block if private content is being added to a public deliverable |
 
-Hooks are advisory at v0.1 — they print warnings but exit 0 unless the user opts into hard-block mode via `RDLC_HOOKS_STRICT=1`. Soft mode is the default until consumer repos earn the strict gate through use.
+Hooks are advisory by default — a triggered gate exits 1 with the warning on stderr (visible to the user, non-blocking) unless the user opts into hard-block mode via `RDLC_HOOKS_STRICT=1`, which exits 2 with the reason on stderr (fed back to Claude). Soft mode is the default until consumer repos earn the strict gate through use. Strict mode fails closed: a half-installed repo (hooks present, RDLC.md missing) or a missing `jq` blocks rather than silently disabling enforcement.
 
 ## Templates
 
@@ -100,6 +105,8 @@ Templates are _scaffolds_, not finished implementations. The consumer repo custo
 | `slop_scan.sh.template` | states-project-research/SDLC.md slop section | One-liner banned-phrase grep |
 | `generate_deliverable.py.template` | states-project-research/scripts/generate_pdf.py | Multi-document HTML generator with audience boundary |
 | `RDLC.md.template` | this repo's RDLC.md | Consumer canonical |
+| `slop-allowlist.txt.template` | states-project-research | Comment-only scaffold for project-specific slop exemptions |
+| `audience-firewall.conf.template` | states-project-research audience boundary | Comment-only scaffold for per-deliverable forbidden-pattern rules |
 
 ## Why templates were ported (vs. "mine in place")
 
@@ -120,10 +127,8 @@ The wizard's `setup` skill writes a single `project_*` memory entry to the consu
 
 This repo's own writing is held to the slop gate the wizard installs in consumers. CI (when set up) will run `templates/slop_scan.sh.template` against every `*.md` file in this repo before merge. Failures block the PR.
 
-## Future architecture changes (deferred to v0.2+)
+## Future architecture changes (deferred)
 
-- **CLI binary** (`cli/bin/rdlc-wizard.js`) — bundled `init`, `check`, `update` commands so installs work without cloning the repo
 - **Codex adapter** — `codex-rdlc-wizard` parallel package for AGENTS.md / `.codex/hooks.json`
-- **Per-domain presets** — medical/legal, political, automotive, journalism flavors of `RDLC.md`
 - **L-code enumeration** — once enough hook-block incidents accumulate to warrant stable IDs (anticheat A–G, tucson L1–L15 are the precedent)
 - **Setup scan refinement** — currently uses the 5-row signal table from xdlc/docs/cross-domain-concerns.md; will refine after first non-originating consumer
