@@ -91,7 +91,7 @@ echo "readme" > "$TMPDIR_TEST/README.md"
 echo "<html>readme</html>" > "$TMPDIR_TEST/README.html"
 out_root=$(node "$CLI" complexity "$TMPDIR_TEST" 2>&1)
 assert "root-level paired deliverables: deliverables count >= 3" 'echo "$out_root" | jq -e ".signals[] | select(test(\"deliverables:[3-9]\"))" >/dev/null'
-assert "root-level: README.md does NOT count as deliverable" 'echo "$out_root" | jq -e ".signals[] | select(test(\"deliverables:[0-9]+\"))" | jq -e ". | test(\"deliverables:[3-4] \") or test(\"deliverables:3 \")" >/dev/null'
+assert "root-level: README.md does NOT count as deliverable" 'echo "$out_root" | jq -e ".signals[] | select(test(\"deliverables:[0-9]+\"))" | jq -e ". | test(\"deliverables:3 \")" >/dev/null'
 rm -rf "$TMPDIR_TEST"
 
 # --- Scenario 6: nonexistent path → exit 2 ---

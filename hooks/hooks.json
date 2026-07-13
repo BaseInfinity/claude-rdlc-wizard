@@ -13,7 +13,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|MultiEdit",
+        "matcher": "^(Write|Edit|MultiEdit)$",
         "hooks": [
           {
             "type": "command",
@@ -21,17 +21,14 @@
           },
           {
             "type": "command",
-            "if": "Write(research/**) Edit(research/**) MultiEdit(research/**) Write(evidence/**) Edit(evidence/**) MultiEdit(evidence/**)",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/confidence-required.sh"
           },
           {
             "type": "command",
-            "if": "Write(research/**) Edit(research/**) MultiEdit(research/**) Write(evidence/**) Edit(evidence/**) MultiEdit(evidence/**)",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/source-required.sh"
           },
           {
             "type": "command",
-            "if": "Write(output/**) Edit(output/**) MultiEdit(output/**)",
             "command": "${CLAUDE_PLUGIN_ROOT}/hooks/audience-firewall.sh"
           }
         ]

@@ -24,13 +24,34 @@ assert() {
   fi
 }
 
+# run_scan <workdir> [args...] — sets EC and OUT; never aborts the suite
+run_scan() {
+  local dir="$1"; shift
+  set +e
+  OUT=$( (cd "$dir" && bash "$SCAN" "$@") 2>&1 )
+  EC=$?
+  set +e
+}
+
 echo "=== SLOP SCAN TESTS ==="
 echo ""
 
-TMP=$(mktemp -d)
-trap "rm -rf $TMP" EXIT
+TMP=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-slop-test-XXXXXX") || { echo "SETUP FAILED: mktemp" >&2; exit 1; }
+trap 'rm -rf "$TMP"' EXIT
 
-mkdir -p "$TMP/output"
+mkdir -p "$TMP/output" || { echo "SETUP FAILED: mkdir" >&2; exit 1; }
+
+# --- Case 0: no-arg invocation (the documented one) scans the default paths ---
+cat > "$TMP/output/dirty.md" <<'EOF'
+# Dirty Document
+
+Let's deep dive into the cutting-edge paradigm shift.
+EOF
+
+run_scan "$TMP"
+assert "No-arg invocation scans default paths and fails on slop (exit 1)" \
+  '[ "$EC" -eq 1 ] && printf "%s" "$OUT" | grep -q "hard-tier slop detected"'
+rm -f "$TMP/output/dirty.md"
 
 # --- Case 1: clean content passes ---
 cat > "$TMP/output/clean.md" <<'EOF'
@@ -40,8 +61,9 @@ This document contains plain language. No banned phrases here.
 The author wrote it carefully and reviewed it for clarity.
 EOF
 
-(cd "$TMP" && bash "$SCAN" output/) >/dev/null 2>&1
-assert "Clean content passes (exit 0)" '[ $? -eq 0 ]'
+run_scan "$TMP" output/
+assert "Clean content passes (exit 0)" \
+  '[ "$EC" -eq 0 ] && printf "%s" "$OUT" | grep -q "Slop scan PASSED"'
 
 # --- Case 2: hard-fail phrase fails ---
 cat > "$TMP/output/dirty.md" <<'EOF'
@@ -50,14 +72,13 @@ cat > "$TMP/output/dirty.md" <<'EOF'
 Let's deep dive into the cutting-edge paradigm shift.
 EOF
 
-set +e
-(cd "$TMP" && bash "$SCAN" output/) >/dev/null 2>&1
-exit_code=$?
-set -e
-assert "Hard-fail phrases produce exit 1" '[ $exit_code -eq 1 ]'
+run_scan "$TMP" output/
+assert "Hard-fail phrases produce exit 1" \
+  '[ "$EC" -eq 1 ] && printf "%s" "$OUT" | grep -q "hard-tier slop detected"'
+rm -f "$TMP/output/dirty.md"
 
 # --- Case 3: allowlist suppresses false positive ---
-mkdir -p "$TMP/.rdlc"
+mkdir -p "$TMP/.rdlc" || { echo "SETUP FAILED: mkdir .rdlc" >&2; exit 1; }
 cat > "$TMP/.rdlc/slop-allowlist.txt" <<'EOF'
 # Project-specific
 Empowering People over Special Interests
@@ -70,12 +91,9 @@ The Empowering People over Special Interests mission pillar guides our work.
 The phrase above is a direct quote from the organization's strategic plan.
 EOF
 
-set +e
-(cd "$TMP" && bash "$SCAN" output/allowlisted.md) >/dev/null 2>&1
-exit_code=$?
-set -e
+run_scan "$TMP" output/allowlisted.md
 # Should pass: the only "empower" hit is in the allowlisted phrase
-assert "Allowlist suppresses proper-noun match" '[ $exit_code -eq 0 ]'
+assert "Allowlist suppresses proper-noun match" '[ "$EC" -eq 0 ]'
 
 echo ""
 echo "=== SUMMARY ==="

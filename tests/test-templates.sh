@@ -49,7 +49,7 @@ fi
 for tmpl in "$TEMPLATES"/*.md.template; do
   [ -f "$tmpl" ] || continue
   name=$(basename "$tmpl")
-  assert "$name has at least one ATX header" 'grep -qE "^#" "$tmpl"'
+  assert "$name has at least one ATX header" 'grep -qE "^#{1,6} " "$tmpl"'
 done
 
 # RDLC.md.template has the metadata header

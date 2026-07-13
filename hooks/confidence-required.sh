@@ -18,9 +18,7 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=_find-rdlc-root.sh
 source "$HOOK_DIR/_find-rdlc-root.sh"
 
-if ! find_rdlc_root; then
-    exit 0
-fi
+rdlc_require_root
 
 PAYLOAD=""
 if [ ! -t 0 ]; then
@@ -28,15 +26,13 @@ if [ ! -t 0 ]; then
 fi
 [ -z "$PAYLOAD" ] && exit 0
 
-if ! command -v jq >/dev/null 2>&1; then
-    exit 0
-fi
+rdlc_require_jq
 
 FILE_PATH=$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
-# Only fire on research/ or evidence/ paths
+# Only fire on research/ or evidence/ path segments (not e.g. marketresearch/)
 case "$FILE_PATH" in
-    *research/*|*evidence/*) ;;
+    */research/*|research/*|*/evidence/*|evidence/*) ;;
     *) exit 0 ;;
 esac
 
@@ -50,8 +46,9 @@ NEW_CONTENT=$(printf '%s' "$PAYLOAD" | jq -r '
 
 [ -z "$NEW_CONTENT" ] && exit 0
 
-# Already has a confidence label? Pass.
-if printf '%s' "$NEW_CONTENT" | grep -qE 'VERIFIED|SUPPORTED|INFERRED|UNVERIFIED|GAP|DIRECT'; then
+# Already has a confidence label? Pass. Labels must stand alone — a substring
+# inside another uppercase word (SINGAPORE contains GAP) does not count.
+if printf '%s' "$NEW_CONTENT" | grep -qE '(^|[^A-Z])(VERIFIED|SUPPORTED|INFERRED|UNVERIFIED|GAP|DIRECT)([^A-Z]|$)'; then
     exit 0
 fi
 
@@ -73,15 +70,10 @@ CLAIM_CANDIDATES=$(printf '%s' "$NEW_CONTENT" | awk '
 ')
 
 if [ "${CLAIM_CANDIDATES:-0}" -ge 2 ]; then
-    echo ""
-    echo "RDLC CONFIDENCE GATE: new content in ${FILE_PATH} contains $CLAIM_CANDIDATES claim-shaped sentences but no confidence label."
-    echo "Expected one of: VERIFIED / SUPPORTED / INFERRED / UNVERIFIED (or GAP / DIRECT for investigation domains)."
-    echo "See RDLC.md 'Confidence Vocabulary' for guidance."
-    echo ""
-
-    if [ "${RDLC_HOOKS_STRICT:-0}" = "1" ]; then
-        exit 2
-    fi
+    rdlc_gate_fire "" \
+        "RDLC CONFIDENCE GATE: new content in ${FILE_PATH} contains $CLAIM_CANDIDATES claim-shaped sentences but no confidence label." \
+        "Expected one of: VERIFIED / SUPPORTED / INFERRED / UNVERIFIED (or GAP / DIRECT for investigation domains)." \
+        "See RDLC.md 'Confidence Vocabulary' for guidance." ""
 fi
 
 exit 0

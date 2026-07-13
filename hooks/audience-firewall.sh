@@ -17,9 +17,7 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=_find-rdlc-root.sh
 source "$HOOK_DIR/_find-rdlc-root.sh"
 
-if ! find_rdlc_root; then
-    exit 0
-fi
+rdlc_require_root
 
 PROJECT_DIR="$RDLC_ROOT"
 CONF="$PROJECT_DIR/.rdlc/audience-firewall.conf"
@@ -33,17 +31,19 @@ if [ ! -t 0 ]; then
 fi
 [ -z "$PAYLOAD" ] && exit 0
 
-if ! command -v jq >/dev/null 2>&1; then
-    exit 0
-fi
+rdlc_require_jq
 
 FILE_PATH=$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
-# Only fire on output/ paths
+# Only fire on output/ path segments
 case "$FILE_PATH" in
-    *output/*) ;;
+    */output/*|output/*) ;;
     *) exit 0 ;;
 esac
+
+# Conf rules use project-relative globs (see format above), but Claude Code
+# passes absolute paths — normalize before matching.
+REL_PATH="${FILE_PATH#"$PROJECT_DIR"/}"
 
 NEW_CONTENT=$(printf '%s' "$PAYLOAD" | jq -r '
     [
@@ -57,13 +57,22 @@ NEW_CONTENT=$(printf '%s' "$PAYLOAD" | jq -r '
 
 VIOLATIONS=()
 
-# Iterate conf rules
-while IFS='|' read -r glob pattern reason; do
+# Iterate conf rules ("|| [ -n ... ]" keeps a final line without a trailing
+# newline from being silently dropped)
+while IFS='|' read -r glob pattern reason || [ -n "$glob" ]; do
     [ -z "$glob" ] && continue
     [[ "$glob" == \#* ]] && continue
 
-    # Check if FILE_PATH matches the glob
-    case "$FILE_PATH" in
+    # Reject invalid ERE rules loudly instead of silently skipping them
+    # (grep exits 0/1 for match/no-match, >1 for a bad pattern)
+    printf '' | grep -qiE "$pattern" 2>/dev/null
+    if [ $? -gt 1 ]; then
+        echo "RDLC AUDIENCE FIREWALL: invalid rule pattern skipped: $pattern" >&2
+        continue
+    fi
+
+    # Check if the (relative) file path matches the rule glob
+    case "$REL_PATH" in
         $glob)
             # Check new content for the forbidden pattern
             if printf '%s' "$NEW_CONTENT" | grep -qiE "$pattern"; then
@@ -74,17 +83,12 @@ while IFS='|' read -r glob pattern reason; do
 done < "$CONF"
 
 if [ ${#VIOLATIONS[@]} -gt 0 ]; then
-    echo ""
-    echo "RDLC AUDIENCE FIREWALL: forbidden content detected for $FILE_PATH:"
-    printf '  - %s\n' "${VIOLATIONS[@]}"
-    echo ""
-    echo "Audience-private content cannot leak into this deliverable."
-    echo "See RDLC.md 'Audience Firewall' and the project's .rdlc/audience-firewall.conf."
-    echo ""
-
-    if [ "${RDLC_HOOKS_STRICT:-0}" = "1" ]; then
-        exit 2
-    fi
+    VIOLATION_LINES=$(printf '  - %s\n' "${VIOLATIONS[@]}")
+    rdlc_gate_fire "" \
+        "RDLC AUDIENCE FIREWALL: forbidden content detected for $FILE_PATH:" \
+        "$VIOLATION_LINES" "" \
+        "Audience-private content cannot leak into this deliverable." \
+        "See RDLC.md 'Audience Firewall' and the project's .rdlc/audience-firewall.conf." ""
 fi
 
 exit 0

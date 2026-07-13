@@ -9,9 +9,7 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=_find-rdlc-root.sh
 source "$HOOK_DIR/_find-rdlc-root.sh"
 
-if ! find_rdlc_root; then
-    exit 0
-fi
+rdlc_require_root
 
 PROJECT_DIR="$RDLC_ROOT"
 
@@ -29,10 +27,7 @@ if [ -z "$PAYLOAD" ]; then
 fi
 
 # Extract content depending on tool
-if ! command -v jq >/dev/null 2>&1; then
-    # No jq — can't reliably parse, exit silently
-    exit 0
-fi
+rdlc_require_jq
 
 # Concatenate all candidate text fields. Different tools use different field names:
 # Write: tool_input.content
@@ -56,11 +51,16 @@ FILE_PATH=$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.file_path // empty' 2>/d
 ALLOWLIST="$PROJECT_DIR/.rdlc/slop-allowlist.txt"
 FILTERED="$NEW_CONTENT"
 if [ -f "$ALLOWLIST" ]; then
-    while IFS= read -r line; do
+    while IFS= read -r line || [ -n "$line" ]; do
         # Skip empty lines and comments
         [ -z "$line" ] && continue
         [[ "$line" == \#* ]] && continue
-        FILTERED=$(printf '%s' "$FILTERED" | sed "s/${line//\//\\/}//gI") || true
+        # Escape BRE metacharacters so allowlist entries match literally, and
+        # keep the previous content if sed fails (e.g. no case-insensitive
+        # flag) — a failed substitution must not blank the content and
+        # silently disable the gate.
+        esc=$(printf '%s' "$line" | sed 's/[][\.*^$/]/\\&/g')
+        NEXT=$(printf '%s' "$FILTERED" | sed "s/${esc}//gI" 2>/dev/null) && FILTERED="$NEXT"
     done < "$ALLOWLIST"
 fi
 
@@ -68,19 +68,12 @@ fi
 HITS=$(printf '%s' "$FILTERED" | grep -niE "$HARD_FAIL_PATTERN" 2>/dev/null || true)
 
 if [ -n "$HITS" ]; then
-    echo ""
-    echo "RDLC SLOP GATE: banned phrase(s) detected in new content for ${FILE_PATH:-<unknown>}:"
-    echo "$HITS" | head -5
-    echo ""
-    echo "Rewrite before committing. See RDLC.md 'AI Slop Gate' for the full list and guidance."
-    echo "False positive (proper noun, direct quote)? Add the phrase to .rdlc/slop-allowlist.txt"
-    echo ""
-
-    if [ "${RDLC_HOOKS_STRICT:-0}" = "1" ]; then
-        # Hard-block mode: exit 2 sends stderr to Claude as a tool refusal
-        exit 2
-    fi
-    # Soft-warn: exit 0 but message is visible
+    HITS_HEAD=$(printf '%s\n' "$HITS" | head -5)
+    rdlc_gate_fire "" \
+        "RDLC SLOP GATE: banned phrase(s) detected in new content for ${FILE_PATH:-<unknown>}:" \
+        "$HITS_HEAD" "" \
+        "Rewrite before committing. See RDLC.md 'AI Slop Gate' for the full list and guidance." \
+        "False positive (proper noun, direct quote)? Add the phrase to .rdlc/slop-allowlist.txt" ""
 fi
 
 exit 0

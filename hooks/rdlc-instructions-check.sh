@@ -29,16 +29,4 @@ if [ ${#MISSING[@]} -gt 0 ]; then
     echo ""
 fi
 
-# Recommended model + effort nudge for research work (mirrors sdlc-wizard's
-# model-effort-check). Research benefits from Opus 4.7 max + xhigh review.
-if [ -n "${CLAUDE_MODEL:-}" ]; then
-    case "$CLAUDE_MODEL" in
-        *opus[1m]*|*opus*4*7*|*opus*4-7*) ;;
-        *)
-            echo ""
-            echo "RDLC MODEL NUDGE: Research work benefits from Opus 4.7 (1M context)."
-            echo "Run: /model opus[1m]"
-            echo ""
-            ;;
-    esac
-fi
+exit 0

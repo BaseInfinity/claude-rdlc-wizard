@@ -1,7 +1,7 @@
 {
   "name": "claude-rdlc-wizard",
-  "version": "0.7.0",
-  "description": "RDLC enforcement for Claude Code \u2014 hooks, skills, and wizard setup for research repos. The research-domain sibling of claude-sdlc-wizard.",
+  "version": "0.8.0",
+  "description": "RDLC enforcement for Claude Code — hooks, skills, and wizard setup for research repos. The research-domain sibling of claude-sdlc-wizard.",
   "bin": {
     "rdlc-wizard": "cli/bin/rdlc-wizard.js"
   },
@@ -37,5 +37,8 @@
   "homepage": "https://github.com/BaseInfinity/claude-rdlc-wizard#readme",
   "engines": {
     "node": ">=18.0.0"
+  },
+  "scripts": {
+    "test": "bash -c 'rc=0; for t in tests/test-*.sh; do echo \"=== $t ===\"; bash \"$t\" || rc=1; done; exit $rc'"
   }
 }

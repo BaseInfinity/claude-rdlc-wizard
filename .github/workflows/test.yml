@@ -1,0 +1,22 @@
+name: test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq (macOS ships it; ubuntu-latest includes it too, but be explicit)
+        run: command -v jq || (sudo apt-get update && sudo apt-get install -y jq)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - name: Run full test suite
+        run: npm test

@@ -85,6 +85,7 @@ const FILES = [
   { src: 'templates/slop_scan.sh.template', dest: 'scripts/slop_scan.sh', executable: true, base: REPO_ROOT },
   { src: 'templates/generate_deliverable.py.template', dest: 'scripts/generate_deliverable.py', base: REPO_ROOT },
   { src: 'templates/slop-allowlist.txt.template', dest: '.rdlc/slop-allowlist.txt', base: REPO_ROOT },
+  { src: 'templates/audience-firewall.conf.template', dest: '.rdlc/audience-firewall.conf', base: REPO_ROOT },
 ];
 
 const WIZARD_HOOK_MARKERS = FILES
@@ -298,7 +299,7 @@ ${YELLOW}Restart Claude Code${RESET} to load new hooks and skills:
 
 Next steps:
   1. Restart Claude Code (see above)
-  2. Run ${CYAN}/setup${RESET} to configure RDLC for your research domain
+  2. Run ${CYAN}/setup-rdlc${RESET} to configure RDLC for your research domain
   3. The wizard reads RDLC.md to understand what's enforced
 
 The canonical doc is at: RDLC.md
