@@ -13,6 +13,9 @@
 
 set -uo pipefail
 
+# Hook silence assertions must not inherit host-specific locale startup warnings.
+export LC_ALL=C
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HOOKS="$ROOT/hooks"
 

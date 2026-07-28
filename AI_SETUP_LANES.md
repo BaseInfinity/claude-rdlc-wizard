@@ -136,7 +136,7 @@ If GPT-5.6 Sol isn't available on your OpenAI account, Codex auto-falls back to 
 
 The `!` prefix runs shell commands inside your CC session — no need to exit and re-enter. After updating, restart the session for the advisor to activate.
 
-Fable 5 as advisor also requires Fable 5 access for your organization/plan. Fable's inclusion in subscriptions has run in separate windows rather than continuously — free through June 22, 2026, then a second window July 1-7, 2026 (up to 50% of weekly usage limits), then usage-credit metered. Check [anthropic.com/claude/fable](https://www.anthropic.com/claude/fable) for current status rather than assuming either window is still open.
+Fable 5 as advisor also requires Fable 5 access for your organization/plan. Access details and inclusion terms vary by plan tier and have changed more than once since Fable 5 launched (see [support.claude.com](https://support.claude.com/en/articles/15424964-claude-fable-5-on-your-plan) for the plan-tier breakdown as of July 20, 2026: Max and premium Team or seat-based Enterprise seats include it for up to 50% of weekly limits; Pro and standard Team or seat-based Enterprise seats use pay-as-you-go credits; usage-based Enterprise is billed at standard API rates). Check [anthropic.com/claude/fable](https://www.anthropic.com/claude/fable) or the support article above for current status rather than trusting any date-specific snapshot, including this one — this text will go stale again.
 
 ## When the Advisor Is Unavailable
 
