@@ -1,4 +1,4 @@
-<!-- RDLC Wizard Version: 0.3.2 -->
+<!-- RDLC Wizard Version: 0.8.0 -->
 <!-- Setup Date: TBD -->
 <!-- Completed Steps: -->
 <!-- Domain: research -->
@@ -11,11 +11,11 @@ This document is installed by `claude-rdlc-wizard` into the consumer repo. It is
 
 | Property | Value |
 |----------|-------|
-| Wizard Version | 0.3.2 |
-| Last Updated | 2026-05-06 |
-| Claude Code Baseline | v2.1.154+ (required for `claude-opus-4-6[1m]`) |
-| Recommended Model | `claude-opus-4-6[1m]` (Opus 4.6 max) for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
-| Recommended Effort | `max` for research drafting, `xhigh` for review and verification |
+| Wizard Version | 0.8.0 |
+| Last Updated | 2026-07-12 |
+| Claude Code Baseline | v2.1.197+ (required for Sonnet 5 alias resolution) |
+| Recommended Model | `claude-sonnet-5` (Sonnet 5) for primary work, GPT-5.6 Sol xhigh (Codex) for cross-model review |
+| Recommended Effort | `high` for research drafting (Sonnet 5 default; `/effort xhigh` for hard synthesis), `xhigh` for review and verification |
 
 ## RDLC Enforcement
 
@@ -28,11 +28,11 @@ This repository uses the RDLC Wizard to enforce:
 
 ### 2. Confidence Classification
 - Every claim labeled VERIFIED / SUPPORTED / INFERRED / UNVERIFIED
-- Labels are not optional; the hook blocks Write/Edit on research files without one
+- Labels are not optional; the hook warns on Write/Edit on research files without one (blocks with `RDLC_HOOKS_STRICT=1`)
 - Confidence escalates only when new sources land — never silently
 
 ### 3. Cross-Model Review
-- Claude (primary author) drafts; a second model (Codex GPT-5.4 xhigh recommended) reviews
+- Claude (primary author) drafts; a second model (Codex GPT-5.6 Sol xhigh recommended) reviews
 - Mission-first prompt structure: mission, success, failure, audience, stakes
 - Convergence: 2 rounds is the sweet spot, 3 max
 
@@ -57,10 +57,10 @@ This repository uses the RDLC Wizard to enforce:
 |------|---------|---------|
 | `rdlc-prompt-check.sh` | Every prompt | RDLC baseline reminder |
 | `rdlc-instructions-check.sh` | Session start | Validates RDLC.md exists; prompts setup if missing |
-| `slop-scan-pretool.sh` | Before Write/Edit | Blocks AI slop additions |
+| `slop-scan-pretool.sh` | Before Write/Edit | Warns on AI slop additions (blocks in strict mode) |
 | `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/` | Requires confidence label on new claims |
 | `source-required.sh` | Before Write/Edit on research files | Requires source-at-first-mention |
-| `audience-firewall.sh` | Before Write to `output/` | Blocks audience-private content from public deliverables |
+| `audience-firewall.sh` | Before Write to `output/` | Warns on audience-private content in public deliverables (blocks in strict mode) |
 
 ## Skills Available
 
@@ -199,8 +199,21 @@ evidence/
 output/                       # Final deliverables (HTML, PDF)
 .reviews/                     # Review artifacts (handoff.json, preflight-*.md)
 .rdlc/
-└── slop-allowlist.txt        # Project-specific exclusions from slop scan
+├── slop-allowlist.txt        # Project-specific exclusions from slop scan
+└── audience-firewall.conf    # Per-deliverable forbidden-pattern rules (firewall hook is inert until populated)
 ```
+
+## Autocompact Tuning
+
+`CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` controls how full the context window gets before Claude Code compacts the conversation. Research sessions carry long evidence chains — compact too late and source citations get summarized away mid-verification.
+
+| Context window | Task shape | Suggested override |
+|----------------|-----------|--------------------|
+| 200K (Opus 4.6 default) | Long evidence synthesis | 85 |
+| 200K | Short drafting sessions | default (no override) |
+| 1M (Sonnet 5 native, `[1m]` aliases) | Any | default — Sonnet 5 proactively compacts near ~967K tokens natively; don't carry over 200K-era thresholds unexamined |
+
+Set it in the project's `.claude/settings.json` `env` block. When a verification pass is mid-flight, prefer finishing the pass before compaction (compact summaries drop the source-tier detail the confidence labels depend on).
 
 ## Lessons Learned
 

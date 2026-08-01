@@ -33,7 +33,7 @@ if [ "${1:-}" = "--help" ] || [ "${1:-}" = "-h" ]; then
     echo ""
     echo "Options:"
     echo "  --global    Install rdlc-wizard CLI globally via npm"
-    echo "  --pair      Also install claude-sdlc-wizard (recommended for research repos)"
+    echo "  --pair      Also install claude-sdlc-wizard (npm: agentic-sdlc-wizard; recommended for research repos)"
     echo "  --help, -h  Show this help message"
     echo ""
     echo "Requires Node.js >= 18 and npm."

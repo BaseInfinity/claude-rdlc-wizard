@@ -11,7 +11,11 @@
 set -uo pipefail
 
 # Default scan paths — customize for your project
-SCAN_PATHS=("${@:-output/ research/ evidence/}")
+if [ $# -gt 0 ]; then
+    SCAN_PATHS=("$@")
+else
+    SCAN_PATHS=(output/ research/ evidence/)
+fi
 
 # Allowlist (project-specific proper nouns, direct quotes)
 ALLOWLIST=".rdlc/slop-allowlist.txt"

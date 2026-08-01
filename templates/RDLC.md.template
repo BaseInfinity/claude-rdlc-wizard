@@ -14,7 +14,7 @@ This document is your project's research-lifecycle canonical. Edit it freely. Th
 | Wizard Version | {{WIZARD_VERSION}} |
 | Last Updated | {{SETUP_DATE}} |
 | Domain Preset | {{DOMAIN}} |
-| Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
+| Recommended Model | `claude-sonnet-5` (Sonnet 5) for primary work, GPT-5.6 Sol xhigh (Codex) for cross-model review |
 
 ## RDLC Enforcement
 
@@ -32,7 +32,7 @@ This repository uses claude-rdlc-wizard to enforce:
 | Hook | Trigger | Purpose |
 |------|---------|---------|
 | `rdlc-prompt-check.sh` | Every prompt | RDLC baseline reminder |
-| `instructions-loaded-check.sh` | Session start | Validates RDLC.md exists |
+| `rdlc-instructions-check.sh` | Session start | Validates RDLC.md exists |
 | `slop-scan-pretool.sh` | Before Write/Edit | Blocks AI slop additions |
 | `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/` | Requires confidence label |
 | `source-required.sh` | Before Write/Edit on research files | Requires source-at-first-mention |
@@ -109,7 +109,7 @@ check_absent "No fabrication Y" "forbidden pattern" "$DOC"
 ```
 .claude/
 ├── settings.json
-├── hooks/{rdlc-prompt-check,instructions-loaded-check,slop-scan-pretool,confidence-required,source-required,audience-firewall}.sh
+├── hooks/{rdlc-prompt-check,rdlc-instructions-check,slop-scan-pretool,confidence-required,source-required,audience-firewall}.sh
 └── skills/{rdlc,setup,update,feedback}/SKILL.md
 
 scripts/{regression_test.sh,slop_scan.sh,generate_deliverable.py}

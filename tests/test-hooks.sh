@@ -51,14 +51,20 @@ fi
 # Slop scan hook does not crash with empty stdin
 assert "slop-scan-pretool.sh handles empty stdin" 'echo "" | "$HOOKS/slop-scan-pretool.sh"'
 
+# Non-RDLC fixture dir: outside-project tests must not inherit the repo root
+# via CLAUDE_PROJECT_DIR when the suite runs inside a Claude Code session.
+TMP_OUTSIDE=$(mktemp -d "${TMPDIR:-/tmp}/rdlc-hook-outside-XXXXXX")
+
 # Slop scan hook does not crash with non-RDLC project (silent exit)
-assert "slop-scan-pretool.sh exits 0 outside RDLC project" '(cd /tmp && echo "{}" | "$HOOKS/slop-scan-pretool.sh")'
+assert "slop-scan-pretool.sh exits 0 outside RDLC project" '(cd "$TMP_OUTSIDE" && echo "{}" | env -u CLAUDE_PROJECT_DIR "$HOOKS/slop-scan-pretool.sh")'
 
 # rdlc-prompt-check.sh exits silently outside RDLC project
-assert "rdlc-prompt-check.sh exits 0 outside RDLC project" '(cd /tmp && "$HOOKS/rdlc-prompt-check.sh" </dev/null >/dev/null)'
+assert "rdlc-prompt-check.sh exits 0 outside RDLC project" '(cd "$TMP_OUTSIDE" && env -u CLAUDE_PROJECT_DIR "$HOOKS/rdlc-prompt-check.sh" </dev/null >/dev/null)'
 
 # rdlc-instructions-check.sh handles missing RDLC.md
-assert "rdlc-instructions-check.sh handles missing RDLC.md" '(cd /tmp && "$HOOKS/rdlc-instructions-check.sh" >/dev/null)'
+assert "rdlc-instructions-check.sh handles missing RDLC.md" '(cd "$TMP_OUTSIDE" && env -u CLAUDE_PROJECT_DIR "$HOOKS/rdlc-instructions-check.sh" >/dev/null)'
+
+rm -rf "$TMP_OUTSIDE"
 
 # rdlc-prompt-check.sh fires SETUP message when RDLC.md has unresolved
 # "Setup Date: TBD" marker (i.e., npm init dropped preset but /setup-rdlc never ran)
@@ -87,10 +93,13 @@ cat > "$TMP_DONE/RDLC.md" <<'DONE'
 # RDLC Configuration — Medical/Legal Preset
 Body content so file is non-empty.
 DONE
+# Capture output once, then assert both ways — a negated pipeline would pass
+# vacuously if the fixture dir failed to set up (cd fails → negation true).
+DONE_OUT=$( (cd "$TMP_DONE" && "$HOOKS/rdlc-prompt-check.sh" </dev/null 2>/dev/null) )
 assert "rdlc-prompt-check.sh fires BASELINE when Setup Date is filled in" \
-  '(cd "$TMP_DONE" && "$HOOKS/rdlc-prompt-check.sh" </dev/null 2>/dev/null | grep -q "RDLC BASELINE")'
+  'printf "%s" "$DONE_OUT" | grep -q "RDLC BASELINE"'
 assert "rdlc-prompt-check.sh does NOT fire SETUP when Setup Date is filled in" \
-  '! (cd "$TMP_DONE" && "$HOOKS/rdlc-prompt-check.sh" </dev/null 2>/dev/null | grep -q "RDLC SETUP NOT COMPLETE")'
+  '! printf "%s" "$DONE_OUT" | grep -q "RDLC SETUP NOT COMPLETE"'
 rm -rf "$TMP_DONE"
 
 echo ""

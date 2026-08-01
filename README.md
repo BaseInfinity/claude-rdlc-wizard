@@ -2,7 +2,7 @@
 
 > RDLC enforcement for Claude Code — hooks, skills, and wizard setup for research repos. The research-domain sibling of [claude-sdlc-wizard](https://github.com/BaseInfinity/claude-sdlc-wizard).
 
-**Status:** v0.1.0 (bootstrap, 2026-05-04). Three case studies cleared the xdlc "two case studies → extract" threshold: [anticheat](https://github.com/BaseInfinity/anticheat), [states-project-research](https://github.com/BaseInfinity/states-project-research), [tucson-investigation](https://github.com/BaseInfinity/tucson-investigation). Pattern catalog lives in [`PATTERNS.md`](PATTERNS.md); proof-points in [`CASE_STUDIES.md`](CASE_STUDIES.md); build journal in [`EXTRACTION_NOTES.md`](EXTRACTION_NOTES.md). The standalone `~/rdlc/` repo was consolidated into this wizard on 2026-05-04 (mirrors GDLC retirement pattern).
+**Status:** v0.8.0 (bootstrap). Three case studies cleared the xdlc "two case studies → extract" threshold: [anticheat](https://github.com/BaseInfinity/anticheat), [states-project-research](https://github.com/BaseInfinity/states-project-research), [tucson-investigation](https://github.com/BaseInfinity/tucson-investigation). Pattern catalog lives in [`PATTERNS.md`](PATTERNS.md); proof-points in [`CASE_STUDIES.md`](CASE_STUDIES.md); build journal in [`EXTRACTION_NOTES.md`](EXTRACTION_NOTES.md). The standalone `~/rdlc/` repo was consolidated into this wizard on 2026-05-04 (mirrors GDLC retirement pattern).
 
 ## What this installs
 
@@ -14,8 +14,8 @@ A research lifecycle on top of any Claude Code project that produces sourced res
 | `/rdlc` skill | Full lifecycle workflow (Plan → Verify → Review → Ship → Improve) |
 | `/setup-rdlc` skill | Confidence-driven setup — scans repo, asks only what it can't detect |
 | `/update-rdlc` skill | Drift reconciliation when wizard upgrades |
-| `/feedback` skill | Privacy-first contribution loop |
-| Hooks | Slop scan, confidence-required, source-required, prompt-check, audience-firewall |
+| `/feedback-rdlc` skill | Privacy-first contribution loop |
+| Hooks | Slop scan, confidence-required, source-required, prompt-check, audience-firewall, rdlc-instructions-check |
 | Templates | `regression_test.sh`, `slop_scan.sh`, multi-deliverable generator scaffold |
 
 ## Install
@@ -58,21 +58,20 @@ curl -fsSL .../claude-rdlc-wizard/install.sh | bash   # research layer
 | Code review | Cross-model adversarial review |
 | TDD guard hooks | Source verification hooks |
 
-## What's in v0.1.0 vs deferred
+## What's shipped vs deferred
 
-**In v0.1.0:**
-- Skill triple (`rdlc`, `setup`, `update`, `feedback`)
-- Five hooks (prompt-check, slop-scan, confidence-required, source-required, audience-firewall)
-- Three templates (regression_test.sh, slop_scan.sh, generate_deliverable.py skeleton)
-- RDLC.md consumer canonical
+**Shipped:**
+- Four skills (`rdlc`, `setup-rdlc`, `update-rdlc`, `feedback-rdlc`)
+- Six hooks (prompt-check, rdlc-instructions-check, slop-scan, confidence-required, source-required, audience-firewall)
+- Six templates (regression_test.sh, slop_scan.sh, generate_deliverable.py, RDLC.md, slop-allowlist, audience-firewall.conf)
+- RDLC.md consumer canonical + per-domain presets (medical/legal, political, automotive)
+- npm CLI (`npx claude-rdlc-wizard init`), published to the registry
 - install.sh + package.json
 
 **Deferred to later versions** (per skills-first rule, earned through use):
 - Setup wizard scan logic refinement (starts with the 5-row signal table from xdlc cross-domain-concerns.md)
-- Per-domain RDLC presets (medical/legal, political, automotive, journalism)
 - Codex adapter (`codex-rdlc-wizard`)
 - L-code enumeration (anticheat A–G, tucson L1–L15 — earn RDLC's own through use)
-- npm registry publish (currently local install via `npx --prefix` against the cloned repo)
 
 ## Documentation
 
@@ -101,10 +100,11 @@ MIT
 
 ## AI Setup Lanes
 
-Three recommended setups in [`AI_SETUP_LANES.md`](AI_SETUP_LANES.md):
+Four recommended setups in [`AI_SETUP_LANES.md`](AI_SETUP_LANES.md):
 
-| Lane | Planner | Driver | Reviewer | When |
-|------|---------|--------|----------|------|
-| **A — Research Premium** | Opus 4.6 max | Opus 4.6 max | GPT-5.5 xhigh | Research drafting, confidence-critical, source evaluation |
-| **B — Research Saver** | Opus 4.6 max | Sonnet (latest) | GPT-5.5 xhigh | Routine drafting, formatting, docs |
-| **C — Research Lite** | You | Haiku 4.5 | None | Data formatting, bibliography, file management, grunt work |
+| Lane | Advisor/Planner | Driver | Reviewer | When |
+|------|-----------------|--------|----------|------|
+| **A — Sonnet 5 + Fable Advisor (Recommended)** | Fable 5 advisor | Sonnet 5 `high` | GPT-5.6 Sol xhigh | Default for most research work — drafting, verification, docs |
+| **B — Opus 4.6 Stability (Legacy)** | Fable 5 advisor | Opus 4.6 `max` | GPT-5.6 Sol xhigh | High blast radius, workflows tuned to Opus 4.6 consistency |
+| **C — OpusPlan Hybrid (Saver)** | Opus 4.8 plan mode | Sonnet 5 `high` | GPT-5.6 Sol xhigh | Routine work on the Max-bundled `opusplan` cost profile |
+| **D — Research Lite** | You | Sonnet 5 `medium` | None | Data formatting, bibliography, file management, grunt work |

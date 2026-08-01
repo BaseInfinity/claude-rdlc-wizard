@@ -147,6 +147,7 @@ The CLI's `init` (Step 4) already dropped these as part of the v0.3.2+ scaffold:
 - `scripts/slop_scan.sh` — executable, scans `output/`, `research/`, `evidence/`
 - `scripts/generate_deliverable.py` — multi-deliverable generator scaffold
 - `.rdlc/slop-allowlist.txt` — comment-only header; user adds project-specific exemptions
+- `.rdlc/audience-firewall.conf` — comment-only scaffold; the audience-firewall hook has no rules (and never fires) until this is populated
 - `.rdlc/version` — current wizard version, used for drift detection
 
 Re-run `npx claude-rdlc-wizard init` if any are missing (idempotent — won't overwrite). If scripts already existed before init (user customized them), the CLI SKIPped them — surface the diff and let the user decide.
@@ -157,6 +158,7 @@ Now adapt the just-dropped scaffolds to the project:
 
 - `.rdlc/slop-allowlist.txt` — add project-specific proper nouns, direct quotes, or domain vocabulary that legitimately matches banned phrases (e.g., a mission pillar named "Empower X").
 - `scripts/regression_test.sh` — replace TODO markers with `check_present` / `check_absent` assertions about facts the project must (or must not) make. Every defect found later becomes a permanent regression.
+- `.rdlc/audience-firewall.conf` — if the project has multiple audiences (public vs. private deliverables), add `<glob>|<forbidden-pattern>|<reason>` rules. Without rules the firewall hook is inert by design.
 
 ### Step 8: Memory Entry
 
@@ -165,7 +167,7 @@ Write a single `project_rdlc_install.md` to the consumer's memory namespace:
 ```markdown
 ---
 name: rdlc-wizard installed
-description: claude-rdlc-wizard v0.1.0 installed; consumer canonical at RDLC.md
+description: claude-rdlc-wizard installed (version from .rdlc/version); consumer canonical at RDLC.md
 type: project
 ---
 RDLC wizard installed on YYYY-MM-DD. Domain: [detected]. Fourth-label choice: [UNVERIFIED|GAP].
@@ -197,7 +199,7 @@ If any check fails, surface the failure and offer a fix or rollback.
 ### Step 10: Restart Notice
 
 Print:
-> RDLC Wizard v0.1.0 installed.
+> RDLC Wizard installed (version: contents of .rdlc/version).
 >
 > Hooks activate on next Claude Code restart. Run `/exit` then `claude` to reload.
 >
@@ -213,7 +215,7 @@ Print:
 - **Overwriting customizations.** If a file exists, never overwrite — diff and ask.
 - **Bundling SDLC and RDLC enforcement.** They register separately. Detect both, don't force one.
 - **Copying templates without filling them in.** Templates have TODO markers; the wizard must fill domain-specific values during install, not leave the user to do it.
-- **Skipping the smoke check.** Step 10 catches typos in the install path.
+- **Skipping the smoke check.** Step 9 catches typos in the install path.
 
 ## When This Is Overkill
 

@@ -10,9 +10,7 @@ HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=_find-rdlc-root.sh
 source "$HOOK_DIR/_find-rdlc-root.sh"
 
-if ! find_rdlc_root; then
-    exit 0
-fi
+rdlc_require_root
 
 PAYLOAD=""
 if [ ! -t 0 ]; then
@@ -20,14 +18,13 @@ if [ ! -t 0 ]; then
 fi
 [ -z "$PAYLOAD" ] && exit 0
 
-if ! command -v jq >/dev/null 2>&1; then
-    exit 0
-fi
+rdlc_require_jq
 
 FILE_PATH=$(printf '%s' "$PAYLOAD" | jq -r '.tool_input.file_path // empty' 2>/dev/null)
 
+# Only fire on research/ or evidence/ path segments (not e.g. marketresearch/)
 case "$FILE_PATH" in
-    *research/*|*evidence/*) ;;
+    */research/*|research/*|*/evidence/*|evidence/*) ;;
     *) exit 0 ;;
 esac
 
@@ -62,16 +59,11 @@ PARA_COUNT=$(printf '%s' "$NEW_CONTENT" | awk '
 
 # If new content has 3+ claim-shaped paragraphs but ZERO sources, flag it
 if [ "${PARA_COUNT:-0}" -ge 3 ] && [ "${HAS_SOURCE:-0}" -eq 0 ]; then
-    echo ""
-    echo "RDLC SOURCE GATE: new content in ${FILE_PATH} has $PARA_COUNT claim-shaped paragraphs but no source references."
-    echo "Expected at least one of: URL, PMID, DOI, or [Source: ...] inline citation."
-    echo "Source-at-first-mention applies — first appearance of a fact in a research file needs a citation."
-    echo "See RDLC.md 'Source Hierarchy' for tier discipline."
-    echo ""
-
-    if [ "${RDLC_HOOKS_STRICT:-0}" = "1" ]; then
-        exit 2
-    fi
+    rdlc_gate_fire "" \
+        "RDLC SOURCE GATE: new content in ${FILE_PATH} has $PARA_COUNT claim-shaped paragraphs but no source references." \
+        "Expected at least one of: URL, PMID, DOI, or [Source: ...] inline citation." \
+        "Source-at-first-mention applies — first appearance of a fact in a research file needs a citation." \
+        "See RDLC.md 'Source Hierarchy' for tier discipline." ""
 fi
 
 exit 0

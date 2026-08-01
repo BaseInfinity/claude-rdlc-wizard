@@ -138,7 +138,7 @@ Zero hits = pass. Any hit = review and rewrite.
 
 **Allowlist for legitimate domain terms:** add proper nouns (mission pillar names, direct quotes) to `.rdlc/slop-allowlist.txt`, one per line. The scan excludes those.
 
-**Cross-model slop scan.** Different models have different blind spots for their own generated language. Opus may pass content GPT-5.4 still flags as slop. For high-stakes deliverables, run the slop scan on the second model's output of the first model's draft.
+**Cross-model slop scan.** Different models have different blind spots for their own generated language. The primary model may pass content the cross-model reviewer still flags as slop (proven in the tucson case study). For high-stakes deliverables, run the slop scan on the second model's output of the first model's draft.
 
 ## Audience Firewall
 

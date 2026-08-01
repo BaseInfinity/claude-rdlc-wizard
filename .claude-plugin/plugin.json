@@ -1,6 +1,6 @@
 {
   "name": "claude-rdlc-wizard",
-  "version": "0.1.0",
+  "version": "0.8.0",
   "description": "RDLC enforcement for Claude Code — research lifecycle hooks, skills, and templates",
   "author": "BaseInfinity",
   "license": "MIT",

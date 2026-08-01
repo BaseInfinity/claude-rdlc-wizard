@@ -1,4 +1,4 @@
-<!-- RDLC Wizard Version: 0.6.0 -->
+<!-- RDLC Wizard Version: 0.8.0 -->
 <!-- Setup Date: TBD -->
 <!-- Completed Steps: -->
 <!-- Domain: automotive-audit -->
@@ -24,11 +24,11 @@ Diagnostic and dealer-audit research has lifecycle requirements that plain RDLC 
 
 | Property | Value |
 |----------|-------|
-| Wizard Version | 0.6.0 |
+| Wizard Version | 0.8.0 |
 | Preset | automotive-audit |
 | Last Updated | 2026-05-25 |
-| Claude Code Baseline | v2.1.111+ (required for Opus 4.7 / `opus[1m]`) |
-| Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
+| Claude Code Baseline | v2.1.197+ (required for Sonnet 5 alias resolution) |
+| Recommended Model | `claude-sonnet-5` (Sonnet 5) for primary work, GPT-5.6 Sol xhigh (Codex) for cross-model review |
 | Recommended Effort | `max` for research drafting, `xhigh` for review (more rounds for dealer-audit material) |
 
 ## RDLC Enforcement (Automotive/Audit Variant)
@@ -52,7 +52,7 @@ This preset uses tucson's four-label split — the **GAP** label is first-class 
 **GAP vs UNVERIFIED:** UNVERIFIED means "source should exist, haven't checked." GAP means "no source exists, possibly ever." Never substitute one for the other — the audit's credibility depends on the reader knowing which class a gap belongs to.
 
 ### 3. Cross-Model Review (Up to 9 Rounds for Audit Material)
-- Claude (primary author) drafts; Codex GPT-5.5 xhigh reviews
+- Claude (primary author) drafts; Codex GPT-5.6 Sol xhigh reviews
 - Diagnostic deliverables: 2-3 rounds (normal)
 - Dealer-audit deliverables: up to 9 rounds — every round catches real issues until the dealer-side counterpart can no longer find a foothold
 - After 9 rounds with no certification → escalate to human reviewer
@@ -79,7 +79,7 @@ This preset uses tucson's four-label split — the **GAP** label is first-class 
 | `rdlc-prompt-check.sh` | Every prompt | RDLC baseline reminder |
 | `rdlc-instructions-check.sh` | Session start | Validates RDLC.md exists; prompts setup if missing |
 | `slop-scan-pretool.sh` | Before Write/Edit | Blocks AI slop additions |
-| `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/`, `recalls/`, `tsb/` | Requires confidence label on new claims |
+| `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/` | Requires confidence label on new claims (keep recall/TSB notes under `research/` or `evidence/` — the hook only watches those segments) |
 | `source-required.sh` | Before Write/Edit on research files | Requires source-at-first-mention (TSB/recall ID) |
 | `audience-firewall.sh` | Before Write to `output/` | Blocks methodology + adversarial-audience content from leaking |
 

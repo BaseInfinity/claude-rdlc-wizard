@@ -1,4 +1,4 @@
-<!-- RDLC Wizard Version: 0.6.0 -->
+<!-- RDLC Wizard Version: 0.8.0 -->
 <!-- Setup Date: TBD -->
 <!-- Completed Steps: -->
 <!-- Domain: political-research -->
@@ -23,11 +23,11 @@ Political research and interview prep have lifecycle requirements that plain RDL
 
 | Property | Value |
 |----------|-------|
-| Wizard Version | 0.6.0 |
+| Wizard Version | 0.8.0 |
 | Preset | political-research |
 | Last Updated | 2026-05-25 |
-| Claude Code Baseline | v2.1.111+ (required for Opus 4.7 / `opus[1m]`) |
-| Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
+| Claude Code Baseline | v2.1.197+ (required for Sonnet 5 alias resolution) |
+| Recommended Model | `claude-sonnet-5` (Sonnet 5) for primary work, GPT-5.6 Sol xhigh (Codex) for cross-model review |
 | Recommended Effort | `max` for research drafting, `xhigh` for review (especially audience-as-reviewer rounds) |
 
 ## RDLC Enforcement (Political/Research Variant)
@@ -43,7 +43,7 @@ Political research and interview prep have lifecycle requirements that plain RDL
 - INFERRED claims about political behavior (motivation, alliance, intent) require an explicit reasoning chain — never infer-and-state
 
 ### 3. Cross-Model Review with Audience-as-Reviewer (Mandatory)
-- Claude (primary author) drafts; Codex GPT-5.5 xhigh reviews
+- Claude (primary author) drafts; Codex GPT-5.6 Sol xhigh reviews
 - Round 1: structural/factual review
 - Round 2: tone, framing, condescension check ("if you were the subject, when do you stop trusting me?")
 - Round 3: stakes-aware review with mission context ("this doc lands two days before the actual interview — what's the worst-case misread?")
@@ -70,7 +70,7 @@ Political research and interview prep have lifecycle requirements that plain RDL
 | `rdlc-prompt-check.sh` | Every prompt | RDLC baseline reminder |
 | `rdlc-instructions-check.sh` | Session start | Validates RDLC.md exists; prompts setup if missing |
 | `slop-scan-pretool.sh` | Before Write/Edit | Blocks AI slop additions |
-| `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/`, `policy_documents/` | Requires confidence label on new claims |
+| `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/` | Requires confidence label on new claims (`evidence/policy_documents/` is covered via its `evidence/` segment) |
 | `source-required.sh` | Before Write/Edit on research files | Requires source-at-first-mention |
 | `audience-firewall.sh` | Before Write to `output/` | Blocks mock-interview/salary content from subject-facing deliverables |
 

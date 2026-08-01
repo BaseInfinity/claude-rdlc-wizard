@@ -1,4 +1,4 @@
-<!-- RDLC Wizard Version: 0.6.0 -->
+<!-- RDLC Wizard Version: 0.8.0 -->
 <!-- Setup Date: TBD -->
 <!-- Completed Steps: -->
 <!-- Domain: medical-legal -->
@@ -23,11 +23,11 @@ Medical/legal research has lifecycle requirements that plain RDLC doesn't cover.
 
 | Property | Value |
 |----------|-------|
-| Wizard Version | 0.6.0 |
+| Wizard Version | 0.8.0 |
 | Preset | medical-legal |
 | Last Updated | 2026-05-24 |
-| Claude Code Baseline | v2.1.111+ (required for Opus 4.7 / `opus[1m]`) |
-| Recommended Model | `opus[1m]` for primary work, `gpt-5.5 xhigh` (Codex) for cross-model review |
+| Claude Code Baseline | v2.1.197+ (required for Sonnet 5 alias resolution) |
+| Recommended Model | `claude-sonnet-5` (Sonnet 5) for primary work, GPT-5.6 Sol xhigh (Codex) for cross-model review |
 | Recommended Effort | `max` for research drafting, `xhigh` for review and verification |
 
 ## RDLC Enforcement (Medical/Legal Variant)
@@ -51,7 +51,7 @@ Format examples:
 - `[systematic review consensus — VERIFIED · GRADE: High]`
 
 ### 3. Cross-Model Review with Audience-as-Reviewer
-- Claude (primary author) drafts; Codex GPT-5.5 xhigh reviews
+- Claude (primary author) drafts; Codex GPT-5.6 Sol xhigh reviews
 - Mission-first prompt structure: mission, success, failure, audience, stakes
 - For tone-sensitive deliverables (patient-facing, clinician-facing), use the audience-as-reviewer variant: *"If you were the patient/PCP, when do you stop reading?"*
 - Convergence: 2 rounds is the sweet spot, 3 max; 4+ rounds is a signal to escalate to a human reviewer
@@ -83,7 +83,7 @@ Format examples:
 | `rdlc-prompt-check.sh` | Every prompt | RDLC baseline reminder |
 | `rdlc-instructions-check.sh` | Session start | Validates RDLC.md exists; prompts setup if missing |
 | `slop-scan-pretool.sh` | Before Write/Edit | Blocks AI slop additions |
-| `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/`, `clinical/` | Requires confidence label on new claims |
+| `confidence-required.sh` | Before Write/Edit on `research/`, `evidence/` | Requires confidence label on new claims (keep clinical notes under `research/` or `evidence/` — the hook only watches those segments) |
 | `source-required.sh` | Before Write/Edit on research files | Requires source-at-first-mention |
 | `audience-firewall.sh` | Before Write to `output/` | Blocks audience-private content from public deliverables |
 

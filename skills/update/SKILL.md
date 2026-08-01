@@ -42,16 +42,14 @@ Read `RDLC.md` and extract from the metadata comment:
 
 No version comment → treat as `0.0.0` (suggest `/setup-rdlc` instead).
 
-### Step 2: Check CLI Version (when CLI ships)
+### Step 2: Check CLI Version
 
-Once `claude-rdlc-wizard` ships an npm CLI (v0.2+), this step mirrors `claude-sdlc-wizard`'s Step 1.5:
+Mirrors `claude-sdlc-wizard`'s Step 1.5:
 
 1. Detect global install: `npm ls -g claude-rdlc-wizard --json --depth=0`
 2. Detect npx cache: find every `package.json` under `~/.npm/_npx` matching `*claude-rdlc-wizard*`
 3. Compare with semver-aware logic (NOT `sort -V` — it mishandles prereleases)
 4. If installed < latest, surface upgrade options A/B/C (refresh CLI / one-shot init --force / skip)
-
-At v0.1.0: skip this step (no CLI yet).
 
 ### Step 3: Compare Versions and Show What Changed
 
@@ -124,7 +122,7 @@ Body is untouched.
 
 ### Step 8: Verify
 
-Run smoke checks (mirror Step 10 of setup):
+Run smoke checks (mirror Step 9 of setup):
 - `RDLC.md` parses
 - `.claude/hooks/rdlc-prompt-check.sh` exists and is executable
 - `.claude/settings.json` is valid JSON (`jq -e .`)

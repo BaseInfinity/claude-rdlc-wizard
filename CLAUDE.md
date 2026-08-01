@@ -12,9 +12,9 @@ This is a **meta-repository**. It contains the RDLC Wizard documentation, skills
 
 - `RDLC.md` — the consumer-installable canonical that gets copied into target repos
 - `skills/` — four skills: `rdlc` (the doing-the-work skill), `setup`, `update`, `feedback`
-- `hooks/` — five hooks enforcing slop / confidence / source / audience / prompt baseline
+- `hooks/` — six hooks (plus a shared `_find-rdlc-root.sh` helper) enforcing slop / confidence / source / audience / prompt baseline / session-start instructions check
 - `templates/` — reusable scaffolds (regression test suite, slop scan, multi-deliverable generator)
-- `cli/` — npm CLI for `npx claude-rdlc-wizard init` (deferred to v0.2)
+- `cli/` — npm CLI for `npx claude-rdlc-wizard init` (published to the npm registry)
 - `tests/` — bash + jq fixtures for hook and template behavior
 
 ### What this repo does NOT have
@@ -33,7 +33,10 @@ This is a **meta-repository**. It contains the RDLC Wizard documentation, skills
 
 | Command | Purpose |
 |---------|---------|
-| `bash tests/test-hooks.sh` | Run hook behavior tests |
+| `npm test` | Run every suite in `tests/` (hooks, enforcement, doc consistency, templates, slop scan, CLI) |
+| `bash tests/test-hooks.sh` | Run hook smoke tests |
+| `bash tests/test-hooks-enforcement.sh` | Run gate exit-code / stderr-routing tests |
+| `bash tests/test-doc-consistency.sh` | Run doc drift regression tests |
 | `bash tests/test-templates.sh` | Verify template files parse correctly |
 | `bash tests/test-slop-scan.sh` | Verify the banned-phrase grep matches expected hits |
 | `./install.sh --help` | Installer help |
